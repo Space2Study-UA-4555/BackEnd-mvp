@@ -5,6 +5,7 @@ module.exports = {
   },
   verbose: true,
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/src/test/jest.setup.js'],
   collectCoverage: true,
   collectCoverageFrom: [
     '!<rootDir>/node_modules/*',
