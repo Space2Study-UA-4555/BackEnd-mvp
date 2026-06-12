@@ -8,6 +8,21 @@ const mongoose = require('mongoose')
 describe('Question service', () => {
   let server, user, category
 
+  const createQuestionData = (overrides = {}) => ({
+    title: 'What is React?',
+    text: 'Explain React',
+    answers: [
+      {
+        text: 'Library',
+        isCorrect: true
+      }
+    ],
+    type: 'openAnswer',
+    category: category._id,
+    author: user._id,
+    ...overrides
+  })
+
   beforeAll(async () => {
     ({ server } = await serverInit())
   })
@@ -16,7 +31,7 @@ describe('Question service', () => {
     user = await User.create({
       firstName: 'Test',
       lastName: 'User',
-      email: 'test4@email.com',
+      email: `test-${Date.now()}@email.com`,
       password: '12345qwerty',
       role: ['tutor']
     })
@@ -36,19 +51,7 @@ describe('Question service', () => {
   })
 
   it('should get question by id', async () => {
-    const questionData = {
-      title: 'What is React?',
-      text: 'Explain React',
-      answers: [
-        {
-          text: 'Library',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+    const questionData = createQuestionData()
 
     const createdQuestion = await questionService.createQuestion(
       user._id,
@@ -121,19 +124,7 @@ describe('Question service', () => {
   })
 
   it('should create question', async () => {  
-    const questionData = {
-      title: 'What is React?',
-      text: 'Explain React',
-      answers: [
-        {
-          text: 'Library',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+    const questionData = createQuestionData()
 
     const question = await questionService.createQuestion(
       user._id,
@@ -157,33 +148,15 @@ describe('Question service', () => {
   })
 
   it('should update question', async () => {
-    const questionDataOriginal = {
+    const questionDataOriginal = createQuestionData({
       title: 'What is Node.js?',
       text: 'Explain Node.js',
-      answers: [
-        {
-          text: 'Runtime environment',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+    })
 
-    const questionDataUpdated = {
+    const questionDataUpdated = createQuestionData({
       title: 'What is Express.js?',
       text: 'Explain Express.js',
-      answers: [
-        {
-          text: 'Web framework',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+    })
 
     const question = await questionService.createQuestion(
       user._id,
@@ -220,33 +193,15 @@ describe('Question service', () => {
       role: ['tutor']
     })
 
-    const questionDataOriginal = {
+    const questionDataOriginal = createQuestionData({
       title: 'What is Node.js?',
-      text: 'Explain Node.js',
-      answers: [
-        {
-          text: 'Runtime environment',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+      text: 'Explain Node.js'
+    })
 
-    const questionDataUpdated = {
+    const questionDataUpdated = createQuestionData({
       title: 'What is Express.js?',
-      text: 'Explain Express.js',
-      answers: [
-        {
-          text: 'Web framework',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+      text: 'Explain Express.js'
+    }) 
 
     const question = await questionService.createQuestion(
       user._id,
@@ -258,22 +213,20 @@ describe('Question service', () => {
       user2._id.toString(),
       questionDataUpdated
     )).rejects.toThrow('You do not have permission to perform this action.')
+
+    const savedQuestion = await Question.findById(question._id)
+
+    expect(savedQuestion.title).toBe(
+      questionDataOriginal.title
+    )
   })
 
   it('should delete question', async () => {
-    const questionData = {
+
+    const questionData = createQuestionData({
       title: 'What is Java?',
       text: 'Explain Java',
-      answers: [
-        {
-          text: 'Programming language',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+    })
 
     const question = await questionService.createQuestion(
       user._id,
@@ -296,19 +249,10 @@ describe('Question service', () => {
       role: ['tutor']
     })
 
-    const questionData = {
+    const questionData = createQuestionData({
       title: 'What is Java?',
       text: 'Explain Java',
-      answers: [
-        {
-          text: 'Programming language',
-          isCorrect: true
-        }
-      ],
-      type: 'openAnswer',
-      category: category._id,
-      author: user._id
-    }
+    })
 
     const question = await questionService.createQuestion(
       user._id,
@@ -324,6 +268,6 @@ describe('Question service', () => {
 
     const savedQuestion = await Question.findById(question._id)
 
-    expect(savedQuestion).not.toBeNull()
+    expect(savedQuestion.title).toBe(questionData.title)
   })
 })
