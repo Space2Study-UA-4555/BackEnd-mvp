@@ -42,7 +42,7 @@ SpaceToStudy project is a platform where experts in various fields share their k
 
 ### Required to install
 
-- NodeJS (18.14.0 LTS)
+- NodeJS (22 LTS)
 
 ### Clone
 
@@ -63,6 +63,42 @@ $ npm install
 3. Open http://localhost:3000 to view it in the browser.
 
 ###### <a name="footnote">\*</a> - to run the project you need an `.env` file in root folder
+
+### Local development with Docker
+
+Requirements: Docker, Docker Compose and Make.
+
+First-time setup (creates `.env` from `.env.example`):
+
+```shell
+$ make setup
+```
+
+Review the generated `.env` values, then start MongoDB and the backend:
+
+```shell
+$ make up
+```
+
+Useful commands:
+
+```shell
+$ make logs s=backend   # tail backend logs
+$ make ps               # container status
+$ make down             # stop containers (data preserved)
+$ make down-volumes     # stop containers AND wipe MongoDB data
+```
+
+To run only the backend against an external MongoDB (set `MONGODB_URL` in `.env`),
+use `make up-backend` — it starts the backend with `--no-deps`, so the bundled
+`mongodb` service is not started.
+
+The `make up`, `make build` and `make rebuild` targets fail early with a clear
+message if `.env` is missing — run `make setup` first.
+
+The compose file ships Traefik labels but no Traefik service: a shared/external
+Traefik instance is expected. Without Traefik, the API is reachable directly at
+`http://localhost:3000`.
 
 ## Usage
 

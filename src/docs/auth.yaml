@@ -35,10 +35,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-                  tokens:
-                    $ref: '#/components/schemas/AuthTokens'
+                  userId:
+                    type: string
+                  userEmail:
+                    type: string
         '409':
           description: Email already in use
           content:
@@ -64,18 +64,59 @@ paths:
                   type: string
       responses:
         '200':
-          description: Login successful
+          description: Login successful. refreshToken is set as HttpOnly cookie.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-                  tokens:
-                    $ref: '#/components/schemas/AuthTokens'
+                  accessToken:
+                    type: string
         '401':
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/google-auth:
+    post:
+      summary: Login or register with Google
+      description: Validates a Google ID token. New Google users are created with the default student role.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: object
+                  required: [credential]
+                  properties:
+                    credential:
+                      type: string
+                      description: Google ID token credential
+      responses:
+        '200':
+          description: Google authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: Invalid or expired Google token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
           content:
             application/json:
               schema:
@@ -85,8 +126,6 @@ paths:
     post:
       summary: Logout current user
       tags: [Auth]
-      security:
-        - bearerAuth: []
       responses:
         '204':
           description: Logged out successfully
@@ -157,7 +196,7 @@ paths:
                 password:
                   type: string
       responses:
-        '200':
+        '204':
           description: Password updated successfully
         '400':
           description: Invalid or expired token

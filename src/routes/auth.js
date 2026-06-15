@@ -9,6 +9,7 @@ const signupValidationSchema = require('~/validation/schemas/signup')
 const { loginValidationSchema } = require('~/validation/schemas/login')
 const resetPasswordValidationSchema = require('~/validation/schemas/resetPassword')
 const forgotPasswordValidationSchema = require('~/validation/schemas/forgotPassword')
+const googleAuthValidationSchema = require('~/validation/schemas/googleAuth')
 
 router.post(
   '/signup',
@@ -31,5 +32,6 @@ router.patch(
   langMiddleware,
   asyncWrapper(authController.updatePassword)
 )
+router.post('/google-auth', validationMiddleware(googleAuthValidationSchema), asyncWrapper(authController.googleAuth))
 
 module.exports = router

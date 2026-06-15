@@ -1,6 +1,8 @@
 const getSortOptions = (sort) => {
   try {
-    const { order, orderBy } = JSON.parse(sort)
+    const parsedSort = typeof sort === 'string' ? JSON.parse(sort) : sort
+    const { order, orderBy } = parsedSort || {}
+
     return { [orderBy || 'updatedAt']: order || 'asc' }
   } catch (error) {
     return { updatedAt: 'asc' }

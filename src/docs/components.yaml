@@ -61,10 +61,9 @@ components:
 
     AuthTokens:
       type: object
+      description: refreshToken is sent as HttpOnly cookie, not in response body
       properties:
         accessToken:
-          type: string
-        refreshToken:
           type: string
 
     Offer:

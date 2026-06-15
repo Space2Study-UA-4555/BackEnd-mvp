@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout the Repo'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 'Start MongoDB'
         uses: supercharge/mongodb-github-action@1.8.0
@@ -29,13 +29,14 @@ jobs:
         env:
           WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7
 
-      - name: 'Install Node.js v.20'
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: '.nvmrc'
+          cache: npm
 
-      - name: 'Install dependencies'
-        run: npm install
+      - name: Install dependencies
+        run: npm ci
 
       - name: 'Run Tests'
         run: npm run test

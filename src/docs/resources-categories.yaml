@@ -16,9 +16,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ResourcesCategory'
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ResourcesCategory'
+                  count:
+                    type: integer
     post:
       summary: Create a resource category
       tags: [ResourcesCategories]
@@ -56,7 +61,12 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    name:
+                      type: string
 
   /resources-categories/{id}:
     patch:
@@ -79,12 +89,8 @@ paths:
                 name:
                   type: string
       responses:
-        '200':
-          description: Updated category
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourcesCategory'
+        '204':
+          description: Category updated
         '404':
           description: Category not found
           content:
