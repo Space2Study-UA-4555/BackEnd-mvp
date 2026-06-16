@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL         := /bin/bash
 COMPOSE       := docker compose
+COMPOSE_PROD  := docker compose -f docker-compose.prod.yml
 
 .PHONY: help
 help: ## Show available commands
@@ -28,9 +29,9 @@ check-env: ## Fail early if .env is missing
 		exit 1; \
 	fi
 
-# ── Dev ────────────────────────────────────────────────────────
+# ── Local (no Docker) ──────────────────────────────────────────
 .PHONY: dev
-dev: ## Start dev server (nodemon)
+dev: ## Run the backend directly on the host (nodemon)
 	npm run start
 
 .PHONY: test
@@ -41,13 +42,9 @@ test: ## Run tests (Jest)
 lint: ## Lint code
 	npm run lint
 
-# ── Docker ─────────────────────────────────────────────────────
-.PHONY: build
-build: check-env ## Build Docker image
-	$(COMPOSE) build
-
+# ── Docker (dev — default) ─────────────────────────────────────
 .PHONY: up
-up: check-env ## Start all services (mongodb + backend)
+up: check-env ## Start dev stack: mongo + backend with live-reload (code bind-mounted)
 	$(COMPOSE) up -d
 
 .PHONY: up-backend
@@ -57,10 +54,6 @@ up-backend: check-env ## Start backend only (uses external MongoDB via MONGODB_U
 .PHONY: down
 down: ## Stop and remove containers (data preserved)
 	$(COMPOSE) down
-
-.PHONY: rebuild
-rebuild: check-env ## Rebuild image and restart
-	$(COMPOSE) up -d --build
 
 .PHONY: restart
 restart: ## Restart containers
@@ -82,6 +75,24 @@ shell: ## Shell inside backend container
 .PHONY: mongo
 mongo: ## MongoDB shell (mongosh)
 	$(COMPOSE) exec mongodb mongosh spacetostudy
+
+# ── Docker (prod) ──────────────────────────────────────────────
+.PHONY: prod-build
+prod-build: check-env ## Build production image (Dockerfile)
+	$(COMPOSE_PROD) build
+
+.PHONY: prod-up
+prod-up: check-env ## Start production stack (built image)
+	$(COMPOSE_PROD) up -d --build
+
+.PHONY: prod-down
+prod-down: ## Stop and remove production containers
+	$(COMPOSE_PROD) down
+
+# ── Deprecated aliases (kept for backward compatibility) ───────
+.PHONY: build rebuild
+build: prod-build  ## Deprecated: use prod-build
+rebuild: prod-up   ## Deprecated: use prod-up
 
 # ── Danger ─────────────────────────────────────────────────────
 .PHONY: down-volumes
