@@ -1,4 +1,6 @@
 const { Schema, model } = require('mongoose')
+const bcrypt = require('bcrypt')
+const { SALT_ROUNDS } = require('~/consts/auth')
 const {
   enums: { APP_LANG_ENUM, SPOKEN_LANG_ENUM, STATUS_ENUM, ROLE_ENUM, LOGIN_ROLE_ENUM }
 } = require('~/consts/validation')
@@ -214,5 +216,35 @@ const userSchema = new Schema(
     id: false
   }
 )
+
+const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$/
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    return next()
+  }
+
+  this.password = await bcrypt.hash(this.password, SALT_ROUNDS)
+  next()
+})
+
+userSchema.pre(['findOneAndUpdate', 'updateOne'], async function (next) {
+  const update = this.getUpdate()
+  const password = update?.password ?? update?.$set?.password
+
+  if (!password || BCRYPT_HASH_REGEX.test(password)) {
+    return next()
+  }
+
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+
+  if (update.$set && update.$set.password !== undefined) {
+    update.$set.password = hashedPassword
+  } else {
+    update.password = hashedPassword
+  }
+
+  next()
+})
 
 module.exports = model(USER, userSchema)

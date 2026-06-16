@@ -76,6 +76,27 @@ shell: ## Shell inside backend container
 mongo: ## MongoDB shell (mongosh)
 	$(COMPOSE) exec mongodb mongosh spacetostudy
 
+# ── Migrations (migrate-mongo, run inside backend container) ───
+.PHONY: migrate-status
+migrate-status: ## List migrations and their state
+	$(COMPOSE) exec backend npm run migrate:status
+
+.PHONY: migrate-up
+migrate-up: ## Apply all pending migrations
+	$(COMPOSE) exec backend npm run migrate:up
+
+.PHONY: migrate-down
+migrate-down: ## Roll back the last applied migration
+	$(COMPOSE) exec backend npm run migrate:down
+
+.PHONY: migrate-create
+migrate-create: ## Scaffold a new migration. Usage: make migrate-create name=add-foo
+	@if [ -z "$(name)" ]; then \
+		echo "✗ name is required. Usage: make migrate-create name=add-foo"; \
+		exit 1; \
+	fi
+	$(COMPOSE) exec backend npm run migrate:create $(name)
+
 # ── Docker (prod) ──────────────────────────────────────────────
 .PHONY: prod-build
 prod-build: check-env ## Build production image (Dockerfile)

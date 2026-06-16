@@ -7,6 +7,10 @@
     "test": "jest --maxWorkers=1",
     "start": "nodemon src/app.js --legacy-watch",
     "start:prod": "node src/app.js",
+    "migrate:status": "migrate-mongo status",
+    "migrate:up": "migrate-mongo up",
+    "migrate:down": "migrate-mongo down",
+    "migrate:create": "migrate-mongo create",
     "lint": "eslint . --fix",
     "prepare": "husky install",
     "pre-commit": "lint-staged"
@@ -39,6 +43,7 @@
     "google-auth-library": "^10.7.0",
     "googleapis": "^105.0.0",
     "jsonwebtoken": "^8.5.1",
+    "migrate-mongo": "^14.0.7",
     "module-alias": "^2.2.2",
     "mongodb": "^4.2.2",
     "mongoose": "^6.1.2",

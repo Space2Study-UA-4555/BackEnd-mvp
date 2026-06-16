@@ -1,4 +1,5 @@
 const crypto = require('node:crypto')
+const bcrypt = require('bcrypt')
 const tokenService = require('~/services/token')
 const emailService = require('~/services/email')
 const googleService = require('~/services/google')
@@ -13,7 +14,8 @@ const {
 } = require('~/consts/errors')
 const emailSubject = require('~/consts/emailSubject')
 const {
-  tokenNames: { REFRESH_TOKEN, RESET_TOKEN, CONFIRM_TOKEN }
+  tokenNames: { REFRESH_TOKEN, RESET_TOKEN, CONFIRM_TOKEN },
+  SALT_ROUNDS
 } = require('~/consts/auth')
 
 const authService = {
@@ -36,7 +38,7 @@ const authService = {
       throw createError(401, USER_NOT_FOUND)
     }
 
-    const checkedPassword = password === user.password || isFromGoogle
+    const checkedPassword = isFromGoogle || (await bcrypt.compare(password, user.password))
 
     if (!checkedPassword) {
       throw createError(401, INCORRECT_CREDENTIALS)
@@ -104,7 +106,8 @@ const authService = {
     }
 
     const { id: userId, firstName, email } = tokenData
-    await privateUpdateUser(userId, { password })
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+    await privateUpdateUser(userId, { password: hashedPassword })
 
     await tokenService.removeResetToken(userId)
 
@@ -121,15 +124,7 @@ const authService = {
 
     if (!user) {
       const randomPassword = crypto.randomBytes(16).toString('hex')
-      await createUser(
-        'student',
-        firstName || 'FirstName',
-        lastName || 'LastName',
-        email,
-        randomPassword,
-        'en',
-        true
-      )
+      await createUser('student', firstName || 'FirstName', lastName || 'LastName', email, randomPassword, 'en', true)
     } else if (!user.isEmailConfirmed) {
       await privateUpdateUser(user._id, { isEmailConfirmed: true })
     }

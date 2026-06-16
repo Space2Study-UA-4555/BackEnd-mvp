@@ -1,5 +1,6 @@
 require('~/initialization/envSetup')
 
+const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const databaseInitialization = require('~/initialization/database')
 const authService = require('~/services/auth')
@@ -72,6 +73,15 @@ describe('Auth service', () => {
         firstName: user.firstName
       })
     )
+  })
+
+  it('should store hashed password on signup, not the plain one', async () => {
+    await authService.signup(user.role, user.firstName, user.lastName, user.email, user.password, user.language)
+
+    const createdUser = await User.findOne({ email: user.email }).select('+password').lean().exec()
+
+    expect(createdUser.password).not.toBe(user.password)
+    expect(await bcrypt.compare(user.password, createdUser.password)).toBe(true)
   })
 
   it('should login confirmed user and return tokens', async () => {
@@ -259,7 +269,8 @@ describe('Auth service', () => {
     const updatedUser = await User.findOne({ email: user.email }).select('+password').lean().exec()
     const updatedToken = await Token.findOne({ user: createdUser._id }).lean().exec()
 
-    expect(updatedUser.password).toBe(newPassword)
+    expect(updatedUser.password).not.toBe(newPassword)
+    expect(await bcrypt.compare(newPassword, updatedUser.password)).toBe(true)
     expect(updatedToken[RESET_TOKEN]).toBeNull()
     expect(emailService.sendEmail).toHaveBeenCalledWith(
       user.email,
