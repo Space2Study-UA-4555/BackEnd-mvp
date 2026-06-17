@@ -4,6 +4,10 @@ require('~/initialization/envSetup')
 
 const { MONGODB_URL } = process.env
 
+if (!MONGODB_URL) {
+  throw new Error('MONGODB_URL is not set — cannot run migrations. Provide it via .env / .env.local or inline.')
+}
+
 let databaseName
 try {
   databaseName = new URL(MONGODB_URL).pathname.replace(/^\//, '') || undefined

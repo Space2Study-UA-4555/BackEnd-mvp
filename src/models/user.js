@@ -217,23 +217,22 @@ const userSchema = new Schema(
   }
 )
 
-const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$/
+const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next()
+    return
   }
 
   this.password = await bcrypt.hash(this.password, SALT_ROUNDS)
-  next()
 })
 
-userSchema.pre(['findOneAndUpdate', 'updateOne'], async function (next) {
+userSchema.pre(['findOneAndUpdate', 'updateOne'], async function () {
   const update = this.getUpdate()
   const password = update?.password ?? update?.$set?.password
 
   if (!password || BCRYPT_HASH_REGEX.test(password)) {
-    return next()
+    return
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
@@ -243,8 +242,6 @@ userSchema.pre(['findOneAndUpdate', 'updateOne'], async function (next) {
   } else {
     update.password = hashedPassword
   }
-
-  next()
 })
 
 module.exports = model(USER, userSchema)

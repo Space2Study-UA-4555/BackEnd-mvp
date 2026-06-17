@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt')
 const { SALT_ROUNDS } = require('~/consts/auth')
 
-const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$/
+const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/
 
 module.exports = {
   /**
@@ -9,12 +9,11 @@ module.exports = {
    * @returns {Promise<void>}
    */
   async up(db) {
-    const users = await db
+    const cursor = db
       .collection('users')
       .find({ password: { $not: BCRYPT_HASH_REGEX } }, { projection: { password: 1 } })
-      .toArray()
 
-    for (const user of users) {
+    for await (const user of cursor) {
       if (!user.password) {
         continue
       }
