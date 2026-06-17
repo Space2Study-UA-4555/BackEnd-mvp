@@ -1,12 +1,54 @@
 const validationMiddleware = require('~/middlewares/validation')
+const { BODY_IS_NOT_DEFINED } = require('~/consts/errors')
+const { createError } = require('~/utils/errorsHelper')
+const { loginValidationSchema } = require('~/validation/schemas/login')
 const errors = require('~/consts/errors')
 
-describe('Validation middleware', () => {
+describe('validationMiddleware', () => {
   const next = jest.fn()
 
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks()
   })
+
+  // -----------------------------
+  //  LOGIN TESTS
+  // -----------------------------
+
+  it('should throw 422 if req.body is not defined', () => {
+    const middleware = validationMiddleware(loginValidationSchema)
+    const req = { body: null }
+
+    expect(() => middleware(req, {}, next)).toThrow(createError(422, BODY_IS_NOT_DEFINED))
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it('should call validateRequired and validateFunc for valid body', () => {
+    const middleware = validationMiddleware(loginValidationSchema)
+
+    const req = {
+      body: {
+        email: 'test@example.com',
+        password: '123456'
+      }
+    }
+
+    middleware(req, {}, next)
+
+    expect(next).toHaveBeenCalledTimes(1)
+  })
+
+  it('should throw error if required field is missing', () => {
+    const middleware = validationMiddleware(loginValidationSchema)
+    const req = { body: { email: undefined, password: '123456' } }
+
+    expect(() => middleware(req, {}, next)).toThrow()
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  // -----------------------------------------
+  //  NESTED TESTS (from develop)
+  // -----------------------------------------
 
   it('should pass validation for nested object fields', () => {
     const schema = {
@@ -21,6 +63,7 @@ describe('Validation middleware', () => {
         }
       }
     }
+
     const req = {
       body: {
         token: {
@@ -30,7 +73,6 @@ describe('Validation middleware', () => {
     }
 
     validationMiddleware(schema)(req, {}, next)
-
     expect(next).toHaveBeenCalledTimes(1)
   })
 
@@ -47,11 +89,8 @@ describe('Validation middleware', () => {
         }
       }
     }
-    const req = {
-      body: {
-        token: {}
-      }
-    }
+
+    const req = { body: { token: {} } }
 
     expect(() => validationMiddleware(schema)(req, {}, next)).toThrow(
       expect.objectContaining({
@@ -75,13 +114,8 @@ describe('Validation middleware', () => {
         }
       }
     }
-    const req = {
-      body: {
-        token: {
-          credential: 123
-        }
-      }
-    }
+
+    const req = { body: { token: { credential: 123 } } }
 
     expect(() => validationMiddleware(schema)(req, {}, next)).toThrow(
       expect.objectContaining({
@@ -99,11 +133,8 @@ describe('Validation middleware', () => {
         required: true
       }
     }
-    const req = {
-      body: {
-        email: 123
-      }
-    }
+
+    const req = { body: { email: 123 } }
 
     expect(() => validationMiddleware(schema)(req, {}, next)).toThrow(
       expect.objectContaining({

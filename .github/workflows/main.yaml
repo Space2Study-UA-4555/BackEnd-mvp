@@ -13,8 +13,6 @@ jobs:
       - name: 'Checkout the Repo'
         uses: actions/checkout@v4
 
-      # - name: Run DB
-
       - name: 'Start MongoDB'
         uses: supercharge/mongodb-github-action@1.8.0
         with:
@@ -29,7 +27,7 @@ jobs:
           wget -qO- https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for | 
           sh -s -- localhost:27017 -- echo "Database is up"
         env:
-          WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
+          WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -65,3 +63,10 @@ jobs:
           GMAIL_REFRESH_TOKEN: ${{secrets.GMAIL_REFRESH_TOKEN}}
           GMAIL_REDIRECT_URI: ${{secrets.GMAIL_REDIRECT_URI}}
           COOKIE_DOMAIN: ${{secrets.COOKIE_DOMAIN}}
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        if: success() || failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
