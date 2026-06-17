@@ -14,12 +14,14 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, text]
+              required: [email, subject, text]
               properties:
                 email:
+                  type: string
+                subject:
                   type: string
                 text:
                   type: string
       responses:
-        '200':
+        '204':
           description: Email sent successfully

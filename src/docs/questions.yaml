@@ -16,9 +16,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Question'
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Question'
+                  count:
+                    type: integer
     post:
       summary: Create a new question (Tutor only)
       tags: [Questions]
@@ -38,7 +43,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Question'
 
-  /questions/{questionId}:
+  /questions/{id}:
     get:
       summary: Get question by ID
       tags: [Questions]
@@ -46,7 +51,7 @@ paths:
         - bearerAuth: []
       parameters:
         - in: path
-          name: questionId
+          name: id
           required: true
           schema:
             type: string
@@ -63,8 +68,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /questions/{id}:
     patch:
       summary: Update question by ID (Tutor only)
       tags: [Questions]

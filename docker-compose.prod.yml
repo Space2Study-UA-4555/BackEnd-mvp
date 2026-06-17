@@ -1,0 +1,51 @@
+services:
+
+  mongodb:
+    image: mongo:6
+    container_name: s2s-mongodb
+    restart: no
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - s2s-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    build: .
+    container_name: s2s-backend
+    restart: no
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - s2s-net
+    # Traefik labels — a shared/external Traefik instance is expected.
+    # There is no Traefik service in this compose file. Without Traefik running,
+    # the backend is still reachable directly on the published port (localhost:3000).
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.s2s-api-http.rule: "Host(`s2s-api.docker.localhost`)"
+      traefik.http.routers.s2s-api-http.entrypoints: http
+      traefik.http.routers.s2s-api-http.middlewares: https-redirect@file
+      traefik.http.routers.s2s-api-https.rule: "Host(`s2s-api.docker.localhost`)"
+      traefik.http.routers.s2s-api-https.entrypoints: https
+      traefik.http.routers.s2s-api-https.tls: "true"
+      traefik.http.services.s2s-api.loadbalancer.server.port: "3000"
+
+networks:
+  s2s-net:
+    driver: bridge
+    name: s2s-net
+
+volumes:
+  mongodb_data:

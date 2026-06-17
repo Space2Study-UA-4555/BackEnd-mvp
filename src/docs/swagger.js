@@ -1,3 +1,9 @@
+const path = require('node:path')
+
+const {
+  config: { SERVER_URL }
+} = require('~/configs/config')
+
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -5,9 +11,9 @@ const swaggerOptions = {
       title: 'SpaceToStudy API',
       version: '1.0.0'
     },
-    servers: [{ url: '/' }]
+    servers: [{ url: SERVER_URL || '/' }]
   },
-  apis: ['./src/docs/*.yaml']
+  apis: [path.join(__dirname, '*.yaml')]
 }
 
 module.exports = swaggerOptions

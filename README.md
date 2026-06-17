@@ -42,7 +42,7 @@ SpaceToStudy project is a platform where experts in various fields share their k
 
 ### Required to install
 
-- NodeJS (18.14.0 LTS)
+- NodeJS (22 LTS)
 
 ### Clone
 
@@ -63,6 +63,58 @@ $ npm install
 3. Open http://localhost:3000 to view it in the browser.
 
 ###### <a name="footnote">\*</a> - to run the project you need an `.env` file in root folder
+
+### Local development with Docker
+
+Requirements: Docker, Docker Compose and Make. The **default** Docker setup is a
+development environment: the source is bind-mounted and the API runs under
+nodemon, so code changes reload live — no rebuild needed.
+
+First-time setup (creates `.env` from `.env.example`):
+
+```shell
+$ make setup
+```
+
+Review the generated `.env` values (keep `MONGODB_URL=mongodb://mongodb:27017/...`
+so the API reaches the bundled MongoDB), then start MongoDB and the backend:
+
+```shell
+$ make up
+```
+
+Useful commands:
+
+```shell
+$ make logs s=backend   # tail backend logs
+$ make ps               # container status
+$ make shell            # shell inside the backend container
+$ make mongo            # mongosh inside the MongoDB container
+$ make down             # stop containers (data preserved)
+$ make down-volumes     # stop containers AND wipe MongoDB data
+```
+
+Dependencies are installed inside the container on start (cached in a named
+volume). After changing `package.json`, reinstall with `make down && make up`.
+
+To run only the backend against an external MongoDB (set `MONGODB_URL` in `.env`),
+use `make up-backend` — it starts the backend with `--no-deps`, so the bundled
+`mongodb` service is not started.
+
+For a production-like build (multi-stage `Dockerfile`, no live-reload) use the
+`prod-*` targets, which read `docker-compose.prod.yml`:
+
+```shell
+$ make prod-up      # build the image and start the production stack
+$ make prod-down    # stop it
+```
+
+The `make up`, `make up-backend` and `make prod-*` targets fail early with a clear
+message if `.env` is missing — run `make setup` first.
+
+The compose files ship Traefik labels but no Traefik service: a shared/external
+Traefik instance is expected (`https://s2s-api.docker.localhost`). Without Traefik,
+the API is reachable directly at `http://localhost:3000`.
 
 ## Usage
 

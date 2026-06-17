@@ -35,4 +35,8 @@ const azureAccess = {
   AZURE_HOST: process.env.AZURE_HOST
 }
 
-module.exports = { config, gmailCredentials, superAdmin, azureAccess }
+const googleAuth = {
+  clientId: process.env.GOOGLE_CLIENT_ID
+}
+
+module.exports = { config, gmailCredentials, superAdmin, azureAccess, googleAuth }

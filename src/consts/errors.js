@@ -123,7 +123,11 @@ const errors = {
   VALIDATION_ERROR: (message) => ({
     code: 'VALIDATION_ERROR',
     message: message
-  })
+  }),
+  INVALID_GOOGLE_TOKEN: {
+    code: 'INVALID_GOOGLE_TOKEN',
+    message: 'The Google authentication token is invalid or has expired.'
+  }
 }
 
 const validationErrors = {

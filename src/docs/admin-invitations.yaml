@@ -21,7 +21,7 @@ paths:
                   items:
                     type: string
       responses:
-        '200':
+        '201':
           description: Invitations sent
     get:
       summary: Get all admin invitations

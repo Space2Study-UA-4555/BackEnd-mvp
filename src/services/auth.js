@@ -1,5 +1,7 @@
+const crypto = require('node:crypto')
 const tokenService = require('~/services/token')
 const emailService = require('~/services/email')
+const googleService = require('~/services/google')
 const { getUserByEmail, createUser, privateUpdateUser, getUserById } = require('~/services/user')
 const { createError } = require('~/utils/errorsHelper')
 const {
@@ -34,7 +36,7 @@ const authService = {
       throw createError(401, USER_NOT_FOUND)
     }
 
-    const checkedPassword = (password === user.password) || isFromGoogle
+    const checkedPassword = password === user.password || isFromGoogle
 
     if (!checkedPassword) {
       throw createError(401, INCORRECT_CREDENTIALS)
@@ -109,6 +111,30 @@ const authService = {
     await emailService.sendEmail(email, emailSubject.SUCCESSFUL_PASSWORD_RESET, language, {
       firstName
     })
+  },
+
+  googleLogin: async (credential) => {
+    const payload = await googleService.validateGoogleToken(credential)
+    const { email, given_name: firstName, family_name: lastName } = payload
+
+    let user = await getUserByEmail(email)
+
+    if (!user) {
+      const randomPassword = crypto.randomBytes(16).toString('hex')
+      await createUser(
+        'student',
+        firstName || 'FirstName',
+        lastName || 'LastName',
+        email,
+        randomPassword,
+        'en',
+        true
+      )
+    } else if (!user.isEmailConfirmed) {
+      await privateUpdateUser(user._id, { isEmailConfirmed: true })
+    }
+
+    return authService.login(email, null, true)
   }
 }
 

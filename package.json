@@ -6,12 +6,17 @@
   "scripts": {
     "test": "jest --maxWorkers=1",
     "start": "nodemon src/app.js --legacy-watch",
+    "start:prod": "node src/app.js",
     "lint": "eslint . --fix",
     "prepare": "husky install",
     "pre-commit": "lint-staged"
   },
   "author": "SoftServe ITA",
   "license": "ISC",
+  "engines": {
+    "node": "22.x",
+    "npm": ">=10"
+  },
   "devDependencies": {
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.3.0",
@@ -31,6 +36,7 @@
     "dotenv": "^10.0.0",
     "email-templates": "^10.0.0",
     "express": "^4.17.1",
+    "google-auth-library": "^10.7.0",
     "googleapis": "^105.0.0",
     "jsonwebtoken": "^8.5.1",
     "module-alias": "^2.2.2",
@@ -39,7 +45,7 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.7.7",
     "pug": "^3.0.2",
-    "swagger-jsdoc": "^6.2.8",
+    "swagger-jsdoc": "6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.8.0",
     "winston-mongodb": "^5.0.7"
