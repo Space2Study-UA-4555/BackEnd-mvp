@@ -160,6 +160,33 @@ components:
           type: string
           format: date-time
 
+    Category:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          description: Unique category name
+          example: Frontend
+        appearance:
+          type: object
+          properties:
+            icon:
+              type: string
+              example: mocked-path-to-icon
+              default: mocked-path-to-icon
+            color:
+              type: string
+              example: '#66C42C'
+              default: '#66C42C'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     AdminInvitation:
       type: object
       properties:
