@@ -127,6 +127,14 @@ const errors = {
   INVALID_GOOGLE_TOKEN: {
     code: 'INVALID_GOOGLE_TOKEN',
     message: 'The Google authentication token is invalid or has expired.'
+  },
+  COUNTRY_STATE_CITY_API_ERROR: {
+    code: 'COUNTRY_STATE_CITY_API_ERROR',
+    message: 'Country State City API request failed.'
+  },
+  COUNTRY_CODE_REQUIRED: {
+    code: 'COUNTRY_CODE_REQUIRED',
+    message: 'Country code is required.'
   }
 }
 

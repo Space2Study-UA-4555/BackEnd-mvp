@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --maxWorkers=1",
+    "test:unit": "jest --coverage --maxWorkers=1 src/test/unit",
     "start": "nodemon src/app.js --legacy-watch",
     "start:prod": "node src/app.js",
     "lint": "eslint . --fix",

@@ -39,4 +39,22 @@ const googleAuth = {
   clientId: process.env.GOOGLE_CLIENT_ID
 }
 
-module.exports = { config, gmailCredentials, superAdmin, azureAccess, googleAuth }
+const countryStateCityApi = {
+  baseUrl: process.env.COUNTRY_STATE_CITY_API_BASE_URL || 'https://api.countrystatecity.in/v1',
+  timeout: (() => {
+    const raw = Number(process.env.COUNTRY_STATE_CITY_API_TIMEOUT)
+    return Number.isFinite(raw) && raw > 0 ? raw : 5000
+  })(),
+  headers: {
+    'X-CSCAPI-KEY': process.env.COUNTRY_STATE_CITY_API_KEY
+  }
+}
+
+module.exports = {
+  config,
+  gmailCredentials,
+  superAdmin,
+  azureAccess,
+  googleAuth,
+  countryStateCityApi
+}
