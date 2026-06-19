@@ -8,6 +8,7 @@ const {
   EMAIL_NOT_CONFIRMED,
   INCORRECT_CREDENTIALS,
   BAD_RESET_TOKEN,
+  BAD_CONFIRM_TOKEN,
   BAD_REFRESH_TOKEN,
   USER_NOT_FOUND
 } = require('~/consts/errors')
@@ -80,6 +81,21 @@ const authService = {
     return tokens
   },
 
+  confirmEmail: async (token) => {
+    const tokenData = tokenService.validateConfirmToken(token)
+    const tokenFromDB = await tokenService.findToken(token, CONFIRM_TOKEN)
+
+    if (!tokenData || !tokenFromDB) {
+      throw createError(400, BAD_CONFIRM_TOKEN)
+    }
+
+    const { id: userId } = tokenData
+
+    await privateUpdateUser(userId, { isEmailConfirmed: true })
+
+    await tokenService.removeConfirmToken(userId)
+  },
+
   sendResetPasswordEmail: async (email, language) => {
     const user = await getUserByEmail(email)
 
@@ -121,15 +137,7 @@ const authService = {
 
     if (!user) {
       const randomPassword = crypto.randomBytes(16).toString('hex')
-      await createUser(
-        'student',
-        firstName || 'FirstName',
-        lastName || 'LastName',
-        email,
-        randomPassword,
-        'en',
-        true
-      )
+      await createUser('student', firstName || 'FirstName', lastName || 'LastName', email, randomPassword, 'en', true)
     } else if (!user.isEmailConfirmed) {
       await privateUpdateUser(user._id, { isEmailConfirmed: true })
     }
