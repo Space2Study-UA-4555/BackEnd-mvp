@@ -1,7 +1,5 @@
 const bcrypt = require('bcrypt')
-const { SALT_ROUNDS } = require('~/consts/auth')
-
-const BCRYPT_HASH_REGEX = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/
+const { SALT_ROUNDS, BCRYPT_HASH_REGEX } = require('~/consts/auth')
 
 module.exports = {
   /**

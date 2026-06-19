@@ -14,8 +14,7 @@ const {
 } = require('~/consts/errors')
 const emailSubject = require('~/consts/emailSubject')
 const {
-  tokenNames: { REFRESH_TOKEN, RESET_TOKEN, CONFIRM_TOKEN },
-  SALT_ROUNDS
+  tokenNames: { REFRESH_TOKEN, RESET_TOKEN, CONFIRM_TOKEN }
 } = require('~/consts/auth')
 
 const authService = {
@@ -106,8 +105,7 @@ const authService = {
     }
 
     const { id: userId, firstName, email } = tokenData
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
-    await privateUpdateUser(userId, { password: hashedPassword })
+    await privateUpdateUser(userId, { password })
 
     await tokenService.removeResetToken(userId)
 

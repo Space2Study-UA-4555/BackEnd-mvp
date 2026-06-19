@@ -24,7 +24,7 @@ const config = {
   migrationsDir: 'migrations',
   changelogCollectionName: 'changelog',
   lockCollectionName: 'changelog_lock',
-  lockTtl: 0,
+  lockTtl: 300,
   migrationFileExtension: '.js',
   useFileHash: false,
   moduleSystem: 'commonjs'
