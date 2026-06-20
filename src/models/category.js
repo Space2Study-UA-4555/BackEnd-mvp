@@ -1,6 +1,12 @@
 const { Schema, model } = require('mongoose')
 const { CATEGORY } = require('~/consts/models')
-const { FIELD_CANNOT_BE_EMPTY, FIELD_CANNOT_BE_LONGER, FIELD_CANNOT_BE_SHORTER } = require('~/consts/errors')
+const {
+  FIELD_CANNOT_BE_EMPTY,
+  FIELD_CANNOT_BE_LONGER,
+  FIELD_CANNOT_BE_SHORTER,
+  INVALID_HEX_COLOR
+} = require('~/consts/errors')
+const { COLOR_PATTERN } = require('~/consts/validation')
 
 const categorySchema = new Schema(
   {
@@ -21,7 +27,12 @@ const categorySchema = new Schema(
       color: {
         type: String,
         required: [true, FIELD_CANNOT_BE_EMPTY('color')],
-        default: '#66C42C'
+        default: '#66C42C',
+        trim: true,
+        validate: {
+          validator: (value) => COLOR_PATTERN.test(value),
+          message: INVALID_HEX_COLOR.message
+        }
       }
     }
   },

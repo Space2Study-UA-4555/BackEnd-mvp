@@ -41,4 +41,18 @@ describe('Category model', () => {
 
     expect(error.errors.name).toBeDefined()
   })
+
+  it('should throw validation error when color is not valid hex', () => {
+    const category = new Category({
+      name: 'Frontend',
+      appearance: {
+        icon: 'icon',
+        color: 'green'
+      }
+    })
+
+    const error = category.validateSync()
+
+    expect(error.errors['appearance.color']).toBeDefined()
+  })
 })

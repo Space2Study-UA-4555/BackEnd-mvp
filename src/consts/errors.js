@@ -127,6 +127,10 @@ const errors = {
   INVALID_GOOGLE_TOKEN: {
     code: 'INVALID_GOOGLE_TOKEN',
     message: 'The Google authentication token is invalid or has expired.'
+  },
+  INVALID_HEX_COLOR: {
+    code: 'INVALID_HEX_COLOR',
+    message: 'Color must be a valid HEX color'
   }
 }
 
