@@ -7,6 +7,7 @@ const categorySchema = new Schema(
     name: {
       type: String,
       unique: true,
+      trim: true,
       required: [true, FIELD_CANNOT_BE_EMPTY('name')],
       minLength: [1, FIELD_CANNOT_BE_SHORTER('name', 1)],
       maxLength: [50, FIELD_CANNOT_BE_LONGER('name', 50)]

@@ -162,6 +162,8 @@ components:
 
     Category:
       type: object
+      required:
+        - name
       properties:
         _id:
           type: string
