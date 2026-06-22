@@ -196,4 +196,43 @@ describe('Auth controller', () => {
       expect(googleService.validateGoogleToken).not.toHaveBeenCalled()
     })
   })
+
+  describe('ConfirmEmail endpoint', () => {
+    let confirmToken
+    let createdUser
+
+    beforeEach(async () => {
+      createdUser = await User.create({
+        role: ['student'],
+        firstName: 'Test',
+        lastName: 'User',
+        email: 'confirm@test.com',
+        password: '12345qwerty'
+      })
+
+      confirmToken = tokenService.generateConfirmToken({
+        id: createdUser._id,
+        role: 'student'
+      })
+
+      await Token.create({
+        user: createdUser._id,
+        confirmToken
+      })
+    })
+
+    it('should confirm user email', async () => {
+      const response = await app.patch(`/auth/confirm-email/${confirmToken}`)
+
+      const updatedUser = await User.findById(createdUser._id).select('+isEmailConfirmed').lean().exec()
+
+      expect(response.statusCode).toBe(204)
+      expect(updatedUser.isEmailConfirmed).toBe(true)
+    })
+
+    it('should throw BAD_CONFIRM_TOKEN error', async () => {
+      const response = await app.patch('/auth/confirm-email/invalid-token')
+      expectError(400, errors.BAD_CONFIRM_TOKEN, response)
+    })
+  })
 })
