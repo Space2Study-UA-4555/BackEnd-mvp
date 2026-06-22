@@ -2,7 +2,7 @@ const { serverInit, serverCleanup, stopServer } = require('~/test/setup')
 const User = require('~/models/user')
 const Category = require('~/models/resourcesCategory')
 const Question = require('~/models/question')
-const questionService = require('~/services/question.js')
+const questionService = require('~/services/question')
 const mongoose = require('mongoose')
 
 describe('Question service', () => {
@@ -19,7 +19,6 @@ describe('Question service', () => {
     ],
     type: 'openAnswer',
     category: category._id,
-    author: user._id,
     ...overrides
   })
 
