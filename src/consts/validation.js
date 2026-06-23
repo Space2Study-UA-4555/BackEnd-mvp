@@ -9,7 +9,7 @@ const regex = {
   EMAIL_PATTERN: /^([a-z\d]+([._-][a-z\d]+)*)@([a-z\d]+([.-][a-z\d]+)*\.[a-z]{2,})$/i,
   PASSWORD_PATTERN: /^(?=.*\d)(?=.*[a-zа-яєії])\S+$/i,
   NAME_PATTERN: /^[a-zа-яєії]+$/i,
-  COLOR_PATTERN: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/i
+  COLOR_PATTERN: /^#([a-f0-9]{6}|[a-f0-9]{3})$/i
 }
 
 const enums = {
