@@ -182,6 +182,27 @@ components:
               type: string
               example: '#66C42C'
               default: '#66C42C'
+
+    Subject:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          description: Subject name
+          example: English
+        category:
+          oneOf:
+            - type: string
+            - $ref: '#/components/schemas/Category'
+        totalOffers:
+          type: object
+          properties:
+            student:
+              type: number
+            tutor:
+              type: number
         createdAt:
           type: string
           format: date-time
