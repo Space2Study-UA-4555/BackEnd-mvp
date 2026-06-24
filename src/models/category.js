@@ -6,7 +6,9 @@ const {
   FIELD_CANNOT_BE_SHORTER,
   INVALID_HEX_COLOR
 } = require('~/consts/errors')
-const { COLOR_PATTERN } = require('~/consts/validation')
+const {
+  regex: { COLOR_PATTERN }
+} = require('~/consts/validation')
 
 const categorySchema = new Schema(
   {
