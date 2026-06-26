@@ -30,9 +30,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /locations/cities:
+  /locations/states:
     get:
-      summary: Get cities by country code
+      summary: Get states by country code
       tags: [Locations]
       parameters:
         - in: query
@@ -41,6 +41,52 @@ paths:
           schema:
             type: string
           example: UA
+      responses:
+        '200':
+          description: List of states
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: Kyivska
+                    iso2:
+                      type: string
+                      example: KV
+        '400':
+          description: Missing countryCode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: Country State City API request failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /locations/cities:
+    get:
+      summary: Get cities by country and state code
+      tags: [Locations]
+      parameters:
+        - in: query
+          name: countryCode
+          required: true
+          schema:
+            type: string
+          example: UA
+        - in: query
+          name: stateCode
+          required: true
+          schema:
+            type: string
+          example: KV
       responses:
         '200':
           description: List of cities
@@ -55,7 +101,7 @@ paths:
                       type: string
                       example: Kyiv
         '400':
-          description: Missing countryCode
+          description: Missing countryCode or stateCode
           content:
             application/json:
               schema:

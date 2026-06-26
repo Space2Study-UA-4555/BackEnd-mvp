@@ -136,6 +136,10 @@ const errors = {
     code: 'COUNTRY_CODE_REQUIRED',
     message: 'Country code is required.'
   },
+  STATE_CODE_REQUIRED: {
+    code: 'STATE_CODE_REQUIRED',
+    message: 'State code is required.'
+  },
   INVALID_HEX_COLOR: {
     code: 'INVALID_HEX_COLOR',
     message: 'Color must be a valid HEX color'

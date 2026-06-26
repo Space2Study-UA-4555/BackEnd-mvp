@@ -1,30 +1,35 @@
 const {
   countryStateCityApi: { baseUrl, headers, timeout }
 } = require('~/configs/config')
-const { COUNTRY_STATE_CITY_API_ERROR, COUNTRY_CODE_REQUIRED } = require('~/consts/errors')
+const {
+  COUNTRY_STATE_CITY_API_ERROR,
+  COUNTRY_CODE_REQUIRED,
+  STATE_CODE_REQUIRED
+} = require('~/consts/errors')
 const { createError } = require('~/utils/errorsHelper')
 const logger = require('~/logger/logger')
 
-/* -------------------- COUNTRIES -------------------- */
+const safeParseJson = async (response) => {
+  try {
+    return await response.json()
+  } catch (err) {
+    // ignore JSON parse error
+    return {}
+  }
+}
+
+const sortByName = (arr) => arr.sort((a, b) => a.name.localeCompare(b.name))
 
 const getCountryData = ({ name, iso2 }) => ({ name, iso2 })
-
-const sortCountriesByName = (countries) => countries.sort((a, b) => a.name.localeCompare(b.name))
-
 let cachedCountries = null
 
-/* -------------------- CITIES -------------------- */
+const getStateData = ({ name, iso2 }) => ({ name, iso2 })
+let cachedStates = {}
 
 const getCityData = ({ name }) => ({ name })
-
-const sortCitiesByName = (cities) => cities.sort((a, b) => a.name.localeCompare(b.name))
-
-let cachedCities = {} // cache per countryCode
-
-/* -------------------- SERVICE -------------------- */
+let cachedCities = {}
 
 const locationService = {
-  /* -------- COUNTRIES -------- */
   getCountries: async () => {
     try {
       if (cachedCountries) {
@@ -38,12 +43,7 @@ const locationService = {
       })
 
       if (!response.ok) {
-        let errorBody = {}
-        try {
-          errorBody = await response.json()
-        } catch (_) {
-          errorBody = {}
-        }
+        const errorBody = await safeParseJson(response)
 
         throw createError(response.status, {
           message: errorBody.message,
@@ -51,9 +51,8 @@ const locationService = {
         })
       }
 
-      const countries = await response.json()
-
-      cachedCountries = sortCountriesByName(countries.map(getCountryData))
+      const countries = await safeParseJson(response)
+      cachedCountries = sortByName(countries.map(getCountryData))
 
       return cachedCountries
     } catch (error) {
@@ -62,30 +61,24 @@ const locationService = {
     }
   },
 
-  /* -------- CITIES -------- */
-  getCities: async (countryCode) => {
+  getStates: async (countryCode) => {
     try {
       if (!countryCode) {
         throw createError(400, COUNTRY_CODE_REQUIRED)
       }
 
-      if (cachedCities[countryCode]) {
-        return cachedCities[countryCode]
+      if (cachedStates[countryCode]) {
+        return cachedStates[countryCode]
       }
 
-      const response = await fetch(`${baseUrl}/countries/${countryCode}/cities`, {
+      const response = await fetch(`${baseUrl}/countries/${countryCode}/states`, {
         method: 'GET',
         headers,
         signal: AbortSignal.timeout(timeout)
       })
 
       if (!response.ok) {
-        let errorBody = {}
-        try {
-          errorBody = await response.json()
-        } catch (_) {
-          errorBody = {}
-        }
+        const errorBody = await safeParseJson(response)
 
         throw createError(response.status, {
           message: errorBody.message,
@@ -93,15 +86,66 @@ const locationService = {
         })
       }
 
-      const cities = await response.json()
+      const states = await safeParseJson(response)
+      cachedStates[countryCode] = sortByName(states.map(getStateData))
 
-      cachedCities[countryCode] = sortCitiesByName(cities.map(getCityData))
-
-      return cachedCities[countryCode]
+      return cachedStates[countryCode]
     } catch (error) {
       logger.error(error)
 
       if (error.code === COUNTRY_CODE_REQUIRED.code) {
+        throw error
+      }
+
+      throw createError(502, COUNTRY_STATE_CITY_API_ERROR)
+    }
+  },
+
+  getCities: async (countryCode, stateCode) => {
+    try {
+      if (!countryCode) {
+        throw createError(400, COUNTRY_CODE_REQUIRED)
+      }
+
+      if (!stateCode) {
+        throw createError(400, STATE_CODE_REQUIRED)
+      }
+
+      const cacheKey = `${countryCode}-${stateCode}`
+
+      if (cachedCities[cacheKey]) {
+        return cachedCities[cacheKey]
+      }
+
+      const response = await fetch(
+        `${baseUrl}/countries/${countryCode}/states/${stateCode}/cities`,
+        {
+          method: 'GET',
+          headers,
+          signal: AbortSignal.timeout(timeout)
+        }
+      )
+
+      if (!response.ok) {
+        const errorBody = await safeParseJson(response)
+
+        throw createError(response.status, {
+          message: errorBody.message,
+          code: response.statusText
+        })
+      }
+
+      const cities = await safeParseJson(response)
+      cachedCities[cacheKey] = sortByName(cities.map(getCityData))
+
+      return cachedCities[cacheKey]
+    } catch (error) {
+      logger.error(error)
+
+      if (
+        error.code === COUNTRY_CODE_REQUIRED.code ||
+        error.code === STATE_CODE_REQUIRED.code
+      ) {
         throw error
       }
 

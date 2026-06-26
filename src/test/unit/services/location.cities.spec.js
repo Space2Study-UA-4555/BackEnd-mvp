@@ -36,15 +36,18 @@ describe('Location service — getCities', () => {
       json: jest.fn().mockResolvedValue(cities)
     })
 
-    const result = await locationService.getCities('UA')
+    const result = await locationService.getCities('UA', 'KV')
 
-    expect(global.fetch).toHaveBeenCalledWith('https://test-country-state-city-api.com/v1/countries/UA/cities', {
-      method: 'GET',
-      signal: expect.any(AbortSignal),
-      headers: {
-        'X-CSCAPI-KEY': 'test-api-key'
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://test-country-state-city-api.com/v1/countries/UA/states/KV/cities',
+      {
+        method: 'GET',
+        signal: expect.any(AbortSignal),
+        headers: {
+          'X-CSCAPI-KEY': 'test-api-key'
+        }
       }
-    })
+    )
 
     expect(result).toEqual([{ name: 'Kyiv' }, { name: 'Lviv' }])
   })
@@ -60,7 +63,7 @@ describe('Location service — getCities', () => {
       json: jest.fn().mockResolvedValue(cities)
     })
 
-    const result = await locationService.getCities('UA')
+    const result = await locationService.getCities('UA', 'KV')
 
     expect(result).toEqual([{ name: 'Kyiv' }, { name: 'Lviv' }])
   })
@@ -73,7 +76,7 @@ describe('Location service — getCities', () => {
       json: jest.fn().mockResolvedValue(cities)
     })
 
-    const result = await locationService.getCities('UA')
+    const result = await locationService.getCities('UA', 'KV')
 
     expect(result).toEqual([{ name: 'Kyiv' }, { name: 'Lviv' }])
   })
@@ -86,8 +89,8 @@ describe('Location service — getCities', () => {
       json: jest.fn().mockResolvedValue(cities)
     })
 
-    const first = await locationService.getCities('UA')
-    const second = await locationService.getCities('UA')
+    const first = await locationService.getCities('UA', 'KV')
+    const second = await locationService.getCities('UA', 'KV')
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
     expect(first).toEqual(second)
@@ -103,7 +106,7 @@ describe('Location service — getCities', () => {
       json
     })
 
-    await expect(locationService.getCities('UA')).rejects.toMatchObject({
+    await expect(locationService.getCities('UA', 'KV')).rejects.toMatchObject({
       status: 502,
       code: errors.COUNTRY_STATE_CITY_API_ERROR.code
     })
@@ -115,16 +118,23 @@ describe('Location service — getCities', () => {
     const error = new Error('Network error')
     global.fetch.mockRejectedValue(error)
 
-    await expect(locationService.getCities('UA')).rejects.toMatchObject({
+    await expect(locationService.getCities('UA', 'KV')).rejects.toMatchObject({
       status: 502,
       code: errors.COUNTRY_STATE_CITY_API_ERROR.code
     })
   })
 
   it('should throw error when countryCode is missing', async () => {
-    await expect(locationService.getCities()).rejects.toMatchObject({
+    await expect(locationService.getCities(undefined, 'KV')).rejects.toMatchObject({
       status: 400,
       code: errors.COUNTRY_CODE_REQUIRED.code
+    })
+  })
+
+  it('should throw error when stateCode is missing', async () => {
+    await expect(locationService.getCities('UA')).rejects.toMatchObject({
+      status: 400,
+      code: errors.STATE_CODE_REQUIRED.code
     })
   })
 })

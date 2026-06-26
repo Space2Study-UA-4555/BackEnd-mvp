@@ -8,7 +8,7 @@ describe('Location controller — getCities', () => {
   let mockResponse
 
   beforeEach(() => {
-    mockRequest = { query: { countryCode: 'UA' } }
+    mockRequest = { query: { countryCode: 'UA', stateCode: 'KV' } }
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn()
@@ -25,7 +25,7 @@ describe('Location controller — getCities', () => {
 
     await getCities(mockRequest, mockResponse)
 
-    expect(locationService.getCities).toHaveBeenCalledWith('UA')
+    expect(locationService.getCities).toHaveBeenCalledWith('UA', 'KV')
     expect(mockResponse.status).toHaveBeenCalledWith(200)
     expect(mockResponse.json).toHaveBeenCalledWith(cities)
   })
@@ -35,7 +35,7 @@ describe('Location controller — getCities', () => {
 
     await getCities(mockRequest, mockResponse)
 
-    expect(locationService.getCities).toHaveBeenCalledWith('UA')
+    expect(locationService.getCities).toHaveBeenCalledWith('UA', 'KV')
     expect(mockResponse.status).toHaveBeenCalledWith(200)
     expect(mockResponse.json).toHaveBeenCalledWith([])
   })
