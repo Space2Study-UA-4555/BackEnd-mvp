@@ -20,6 +20,18 @@ describe('Subject service', () => {
     return chain
   }
 
+  const getSubjectFindByIdChain = (subject) => {
+    const chain = {
+      populate: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(subject)
+    }
+
+    Subject.findById.mockReturnValue(chain)
+
+    return chain
+  }
+
   afterEach(() => {
     jest.clearAllMocks()
   })
@@ -118,5 +130,26 @@ describe('Subject service', () => {
     expect(Subject.find).toHaveBeenCalledWith(match)
     expect(Subject.countDocuments).toHaveBeenCalledWith(match)
     expect(result).toEqual({ items: [], count: 0 })
+  })
+
+  it('should get subject by id and populate category', async () => {
+    const subjectId = 'subjectId'
+    const subject = {
+      _id: subjectId,
+      name: 'English',
+      category: {
+        _id: 'categoryId',
+        name: 'Languages'
+      }
+    }
+    const findByIdChain = getSubjectFindByIdChain(subject)
+
+    const result = await subjectService.getSubjectById(subjectId)
+
+    expect(Subject.findById).toHaveBeenCalledWith(subjectId)
+    expect(findByIdChain.populate).toHaveBeenCalledWith({ path: 'category', select: '_id name' })
+    expect(findByIdChain.lean).toHaveBeenCalled()
+    expect(findByIdChain.exec).toHaveBeenCalled()
+    expect(result).toEqual(subject)
   })
 })

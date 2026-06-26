@@ -1,7 +1,7 @@
 jest.mock('~/services/subjects')
 
 const subjectService = require('~/services/subjects')
-const { createSubject, getSubjects } = require('~/controllers/subjects')
+const { createSubject, getSubjects, getSubjectById } = require('~/controllers/subjects')
 
 describe('Subject controller', () => {
   let mockResponse
@@ -136,5 +136,30 @@ describe('Subject controller', () => {
     await getSubjects(mockRequest, mockResponse)
 
     expect(subjectService.getSubjects).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), 0, 10)
+  })
+
+  it('should get subject by id and return status 200', async () => {
+    const subjectId = 'subjectId'
+    const subject = {
+      _id: subjectId,
+      name: 'English',
+      category: {
+        _id: 'categoryId',
+        name: 'Languages'
+      }
+    }
+    const mockRequest = {
+      params: {
+        id: subjectId
+      }
+    }
+
+    subjectService.getSubjectById.mockResolvedValue(subject)
+
+    await getSubjectById(mockRequest, mockResponse)
+
+    expect(subjectService.getSubjectById).toHaveBeenCalledWith(subjectId)
+    expect(mockResponse.status).toHaveBeenCalledWith(200)
+    expect(mockResponse.json).toHaveBeenCalledWith(subject)
   })
 })
