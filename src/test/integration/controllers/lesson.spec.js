@@ -86,6 +86,7 @@ describe('Lesson controller', () => {
     it('should throw UNAUTHORIZED', async () => {
       const response = await app.post(endpointUrl).send(testLessonData)
 
+      expect(response.statusCode).toBe(401)
       expectError(401, UNAUTHORIZED, response)
     })
 
@@ -97,6 +98,7 @@ describe('Lesson controller', () => {
         .send(testLessonData)
         .set('Cookie', [`accessToken=${studentAccessToken}`])
 
+      expect(response.statusCode).toBe(403)
       expectError(403, FORBIDDEN, response)
     })
 
@@ -132,9 +134,24 @@ describe('Lesson controller', () => {
       expect(response.body.count).toBe(0)
     })
 
+    it('should not return lessons created by another tutor', async () => {
+      const otherTutorAccessToken = await testUserAuthentication(app, otherTutorData)
+      await app
+        .post(endpointUrl)
+        .send({ ...testLessonData, title: 'Other tutor lesson' })
+        .set('Cookie', [`accessToken=${otherTutorAccessToken}`])
+
+      const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.count).toBe(1)
+      expect(response.body.items.every((lesson) => lesson.author === testLesson.body.author)).toBe(true)
+    })
+
     it('should throw UNAUTHORIZED', async () => {
       const response = await app.get(endpointUrl)
 
+      expect(response.statusCode).toBe(401)
       expectError(401, UNAUTHORIZED, response)
     })
   })
@@ -154,18 +171,21 @@ describe('Lesson controller', () => {
     it('should throw UNAUTHORIZED', async () => {
       const response = await app.get(endpointUrl + testLesson.body._id)
 
+      expect(response.statusCode).toBe(401)
       expectError(401, UNAUTHORIZED, response)
     })
 
     it('should throw INVALID_ID for non-ObjectId value', async () => {
       const response = await app.get(endpointUrl + 'invalid-id').set('Cookie', [`accessToken=${accessToken}`])
 
+      expect(response.statusCode).toBe(400)
       expectError(400, INVALID_ID, response)
     })
 
     it('should throw DOCUMENT_NOT_FOUND for valid but non-existent id', async () => {
       const response = await app.get(endpointUrl + nonExistentId).set('Cookie', [`accessToken=${accessToken}`])
 
+      expect(response.statusCode).toBe(404)
       expectError(404, DOCUMENT_NOT_FOUND(['Lesson']), response)
     })
   })
@@ -185,9 +205,22 @@ describe('Lesson controller', () => {
       })
     })
 
+    it('should ignore protected fields on update', async () => {
+      const response = await app
+        .patch(endpointUrl + testLesson.body._id)
+        .send({ title: 'Whitelisted title', author: nonExistentId, resourceType: 'quizzes' })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.title).toBe('Whitelisted title')
+      expect(response.body.author).toBe(testLesson.body.author)
+      expect(response.body.resourceType).toBe('lessons')
+    })
+
     it('should throw UNAUTHORIZED', async () => {
       const response = await app.patch(endpointUrl + testLesson.body._id).send(updateLessonData)
 
+      expect(response.statusCode).toBe(401)
       expectError(401, UNAUTHORIZED, response)
     })
 
@@ -199,6 +232,7 @@ describe('Lesson controller', () => {
         .send(updateLessonData)
         .set('Cookie', [`accessToken=${otherTutorAccessToken}`])
 
+      expect(response.statusCode).toBe(403)
       expectError(403, FORBIDDEN, response)
     })
 
@@ -208,6 +242,7 @@ describe('Lesson controller', () => {
         .send(updateLessonData)
         .set('Cookie', [`accessToken=${accessToken}`])
 
+      expect(response.statusCode).toBe(404)
       expectError(404, DOCUMENT_NOT_FOUND(['Lesson']), response)
     })
   })
@@ -222,6 +257,7 @@ describe('Lesson controller', () => {
     it('should throw UNAUTHORIZED', async () => {
       const response = await app.delete(endpointUrl + testLesson.body._id)
 
+      expect(response.statusCode).toBe(401)
       expectError(401, UNAUTHORIZED, response)
     })
 
@@ -232,12 +268,14 @@ describe('Lesson controller', () => {
         .delete(endpointUrl + testLesson.body._id)
         .set('Cookie', [`accessToken=${otherTutorAccessToken}`])
 
+      expect(response.statusCode).toBe(403)
       expectError(403, FORBIDDEN, response)
     })
 
     it('should throw DOCUMENT_NOT_FOUND for non-existent id', async () => {
       const response = await app.delete(endpointUrl + nonExistentId).set('Cookie', [`accessToken=${accessToken}`])
 
+      expect(response.statusCode).toBe(404)
       expectError(404, DOCUMENT_NOT_FOUND(['Lesson']), response)
     })
   })

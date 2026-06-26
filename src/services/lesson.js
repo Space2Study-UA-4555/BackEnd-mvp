@@ -3,12 +3,15 @@ const { createForbiddenError } = require('~/utils/errorsHelper')
 
 const lessonService = {
   getLessons: async (match, sort, skip = 0, limit = 10) => {
+    const safeSkip = Number.isInteger(skip) && skip >= 0 ? skip : 0
+    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 10
+
     const items = await Lesson.find(match)
       .collation({ locale: 'en', strength: 1 })
       .populate({ path: 'category', select: '_id name' })
       .sort(sort)
-      .skip(skip)
-      .limit(limit)
+      .skip(safeSkip)
+      .limit(safeLimit)
       .lean()
       .exec()
     const count = await Lesson.countDocuments(match)
@@ -17,7 +20,7 @@ const lessonService = {
   },
 
   getLessonById: async (id) => {
-    return await Lesson.findById(id).lean().exec()
+    return await Lesson.findById(id).populate({ path: 'category', select: '_id name' }).lean().exec()
   },
 
   createLesson: async (author, data) => {
@@ -56,8 +59,12 @@ const lessonService = {
       throw createForbiddenError()
     }
 
-    for (let field in data) {
-      lesson[field] = data[field]
+    const editableFields = ['title', 'description', 'content', 'attachments', 'category']
+
+    for (const field of editableFields) {
+      if (field in data) {
+        lesson[field] = data[field]
+      }
     }
 
     await lesson.save()

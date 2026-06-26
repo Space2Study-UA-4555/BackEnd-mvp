@@ -146,6 +146,10 @@ components:
 
     Lesson:
       type: object
+      required:
+        - title
+        - description
+        - author
       properties:
         _id:
           type: string
@@ -173,6 +177,26 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    LessonInput:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        content:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+          nullable: true
 
     ResourcesCategory:
       type: object
