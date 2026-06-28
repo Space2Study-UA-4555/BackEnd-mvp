@@ -1,4 +1,6 @@
 const Subject = require('~/models/subject')
+const filterAllowedFields = require('~/utils/filterAllowedFields')
+const { allowedSubjectFieldsForUpdate } = require('~/validation/services/subject')
 
 const subjectService = {
   createSubject: async (data) => {
@@ -28,6 +30,18 @@ const subjectService = {
 
   getSubjectById: async (id) => {
     return await Subject.findById(id).populate({ path: 'category', select: '_id name' }).lean().exec()
+  },
+
+  updateSubject: async (id, data) => {
+    const filteredUpdateData = filterAllowedFields(data, allowedSubjectFieldsForUpdate)
+    const subject = await Subject.findById(id).exec()
+
+    for (let field in filteredUpdateData) {
+      subject[field] = filteredUpdateData[field]
+    }
+
+    await subject.save()
+    return await subject.populate({ path: 'category', select: '_id name' })
   }
 }
 

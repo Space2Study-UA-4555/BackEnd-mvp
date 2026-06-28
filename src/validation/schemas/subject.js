@@ -19,4 +19,20 @@ const subjectValidationSchema = {
   }
 }
 
-module.exports = subjectValidationSchema
+const updateSubjectValidationSchema = {
+  name: {
+    type: 'string',
+    length: {
+      min: MIN_NAME_LENGTH,
+      max: MAX_SUBJECT_NAME_LENGTH
+    }
+  },
+  category: {
+    type: 'string'
+  }
+}
+
+module.exports = {
+  subjectValidationSchema,
+  updateSubjectValidationSchema
+}

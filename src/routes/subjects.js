@@ -9,7 +9,7 @@ const isEntityValid = require('~/middlewares/entityValidation')
 const idValidation = require('~/middlewares/idValidation')
 const validationMiddleware = require('~/middlewares/validation')
 const { authMiddleware, restrictTo } = require('~/middlewares/auth')
-const subjectValidationSchema = require('~/validation/schemas/subject')
+const { subjectValidationSchema, updateSubjectValidationSchema } = require('~/validation/schemas/subject')
 
 const body = [{ model: Category, idName: 'category' }]
 const params = [{ model: Subject, idName: 'id' }]
@@ -30,6 +30,14 @@ router.post(
   validationMiddleware(subjectValidationSchema),
   isEntityValid({ body }),
   asyncWrapper(subjectsController.createSubject)
+)
+
+router.patch(
+  '/:id',
+  restrictTo(ADMIN),
+  validationMiddleware(updateSubjectValidationSchema),
+  isEntityValid({ params, body }),
+  asyncWrapper(subjectsController.updateSubject)
 )
 
 module.exports = router

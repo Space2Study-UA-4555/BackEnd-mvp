@@ -5,6 +5,7 @@ const {
   FORBIDDEN,
   DOCUMENT_NOT_FOUND,
   FIELD_IS_NOT_DEFINED,
+  FIELD_IS_NOT_OF_PROPER_LENGTH,
   DOCUMENT_ALREADY_EXISTS,
   INVALID_ID
 } = require('~/consts/errors')
@@ -337,6 +338,141 @@ describe('Subject controller', () => {
 
       expect(response.statusCode).toBe(404)
       expectError(404, DOCUMENT_NOT_FOUND(['Subject']), response)
+    })
+  })
+
+  describe(`PATCH ${endpointUrl}:id`, () => {
+    let subject
+
+    beforeEach(async () => {
+      subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+    })
+
+    it('should update subject for admin', async () => {
+      const secondCategory = await Category.create({
+        name: 'Math'
+      })
+      const updateData = {
+        name: 'Algebra',
+        category: secondCategory._id.toString()
+      }
+
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send(updateData)
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        _id: subject._id.toString(),
+        name: updateData.name,
+        category: {
+          _id: updateData.category,
+          name: secondCategory.name
+        },
+        totalOffers: {
+          student: 0,
+          tutor: 0
+        },
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String)
+      })
+    })
+
+    it('should not update totalOffers from request data', async () => {
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          name: 'Spanish',
+          totalOffers: {
+            student: 100,
+            tutor: 50
+          }
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        _id: subject._id.toString(),
+        name: 'Spanish',
+        totalOffers: {
+          student: 0,
+          tutor: 0
+        }
+      })
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.patch(endpointUrl + subject._id.toString()).send({
+        name: 'Spanish'
+      })
+
+      expect(response.statusCode).toBe(401)
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should throw FORBIDDEN for non-admin user', async () => {
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          name: 'Spanish'
+        })
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(403)
+      expectError(403, FORBIDDEN, response)
+    })
+
+    it('should throw INVALID_ID for non-ObjectId value', async () => {
+      const response = await app
+        .patch(endpointUrl + 'invalid-id')
+        .send({
+          name: 'Spanish'
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(400)
+      expectError(400, INVALID_ID, response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for valid but non-existent subject id', async () => {
+      const response = await app
+        .patch(endpointUrl + '000000000000000000000000')
+        .send({
+          name: 'Spanish'
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Subject']), response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for non-existing category id', async () => {
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          category: '000000000000000000000000'
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Category']), response)
+    })
+
+    it('should throw FIELD_IS_NOT_OF_PROPER_LENGTH for invalid subject name', async () => {
+      const name = 'a'.repeat(51)
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          name
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(422)
+      expectError(422, FIELD_IS_NOT_OF_PROPER_LENGTH('name', { min: 1, max: 50 }), response)
     })
   })
 })
