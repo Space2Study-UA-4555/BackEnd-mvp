@@ -1,12 +1,64 @@
 # @see src/routes/categories.js
 tags:
   - name: Categories
-    description: Category management (requires admin role)
+    description: Category management
 
 paths:
   /categories:
+    get:
+      summary: Get categories
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Filter categories by name
+          example: Front
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: Sort categories
+          example: name
+        - in: query
+          name: skip
+          schema:
+            type: integer
+            default: 0
+          description: Number of items to skip
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Maximum number of items to return
+      responses:
+        '200':
+          description: Categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+                  count:
+                    type: integer
+                    example: 3
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
     post:
-      summary: Create a category
+      summary: Create a category. Only for Admin role
       tags: [Categories]
       security:
         - bearerAuth: []

@@ -178,6 +178,74 @@ describe('Category controller', () => {
   })
 })
 
+describe('GET /categories', () => {
+  let app, server, accessToken
+
+  beforeAll(async () => {
+    ;({ app, server } = await serverInit())
+  })
+
+  beforeEach(async () => {
+    accessToken = await testUserAuthentication(app, {
+      role: STUDENT,
+      firstName: 'Student',
+      lastName: 'User',
+      email: 'student@test.com',
+      password: 'Qwerty123@',
+      isEmailConfirmed: true
+    })
+
+    await Category.create([{ name: 'Frontend' }, { name: 'Backend' }, { name: 'Design' }])
+  })
+
+  afterEach(async () => {
+    await serverCleanup()
+    await Category.syncIndexes()
+  })
+
+  afterAll(async () => {
+    await stopServer(server)
+  })
+
+  it('should return all categories', async () => {
+    const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+
+    expect(response.body.count).toBe(3)
+    expect(response.body.items).toHaveLength(3)
+
+    expect(response.body.items[0]).toHaveProperty('_id')
+    expect(response.body.items[0]).toHaveProperty('name')
+  })
+
+  it('should throw UNAUTHORIZED', async () => {
+    const response = await app.get(endpointUrl)
+
+    expect(response.statusCode).toBe(401)
+    expectError(401, UNAUTHORIZED, response)
+  })
+
+  it('should filter categories by name', async () => {
+    const response = await app.get(`${endpointUrl}?name=Front`).set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+
+    expect(response.body.count).toBe(1)
+    expect(response.body.items).toHaveLength(1)
+    expect(response.body.items[0].name).toBe('Frontend')
+  })
+
+  it('should return categories with pagination', async () => {
+    const response = await app.get(`${endpointUrl}?skip=1&limit=1`).set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+
+    expect(response.body.count).toBe(3)
+    expect(response.body.items).toHaveLength(1)
+  })
+})
+
 describe('Category model', () => {
   it('should trim category name', () => {
     const category = new Category({

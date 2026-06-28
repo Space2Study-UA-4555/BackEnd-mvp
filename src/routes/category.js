@@ -11,6 +11,8 @@ const { authMiddleware, restrictTo } = require('~/middlewares/auth')
 
 router.use(authMiddleware)
 
+router.get('/', asyncWrapper(category.getCategories))
+
 router.use(restrictTo(ADMIN))
 router.post('/', asyncWrapper(category.createCategory))
 
