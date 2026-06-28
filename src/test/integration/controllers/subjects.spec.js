@@ -475,4 +475,59 @@ describe('Subject controller', () => {
       expectError(422, FIELD_IS_NOT_OF_PROPER_LENGTH('name', { min: 1, max: 50 }), response)
     })
   })
+
+  describe(`DELETE ${endpointUrl}:id`, () => {
+    it('should delete subject for admin', async () => {
+      const subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      const response = await app
+        .delete(endpointUrl + subject._id.toString())
+        .set('Cookie', [`accessToken=${accessToken}`])
+      const deletedSubject = await Subject.findById(subject._id).lean().exec()
+
+      expect(response.statusCode).toBe(204)
+      expect(response.body).toEqual({})
+      expect(deletedSubject).toBeNull()
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.delete(endpointUrl + '000000000000000000000000')
+
+      expect(response.statusCode).toBe(401)
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should throw FORBIDDEN for non-admin user', async () => {
+      const subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      const response = await app
+        .delete(endpointUrl + subject._id.toString())
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(403)
+      expectError(403, FORBIDDEN, response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for non-existing subject id', async () => {
+      const response = await app
+        .delete(endpointUrl + '000000000000000000000000')
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Subject']), response)
+    })
+
+    it('should throw INVALID_ID for non-ObjectId value', async () => {
+      const response = await app.delete(endpointUrl + 'invalid-id').set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(400)
+      expectError(400, INVALID_ID, response)
+    })
+  })
 })

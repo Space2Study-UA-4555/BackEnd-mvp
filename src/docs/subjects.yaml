@@ -1,7 +1,7 @@
 # @see src/routes/subjects.js
 tags:
   - name: Subjects
-    description: Subject management. Create and update require admin role.
+    description: Subject management. Create, update and delete require admin role.
 
 paths:
   /subjects:
@@ -227,6 +227,46 @@ paths:
                 $ref: '#/components/schemas/Error'
         '422':
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete subject by id
+      tags: [Subjects]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Subject ID
+          example: 665f1f77bcf86cd799439011
+      responses:
+        '204':
+          description: Subject deleted
+        '400':
+          description: Invalid subject ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Subject not found
           content:
             application/json:
               schema:

@@ -229,4 +229,16 @@ describe('Subject service', () => {
     })
     expect(subject.save).toHaveBeenCalled()
   })
+
+  it('should delete subject by id', async () => {
+    const subjectId = 'subjectId'
+    const exec = jest.fn().mockResolvedValue()
+
+    Subject.findByIdAndRemove.mockReturnValue({ exec })
+
+    await subjectService.deleteSubject(subjectId)
+
+    expect(Subject.findByIdAndRemove).toHaveBeenCalledWith(subjectId)
+    expect(exec).toHaveBeenCalled()
+  })
 })

@@ -42,6 +42,10 @@ const subjectService = {
 
     await subject.save()
     return await subject.populate({ path: 'category', select: '_id name' })
+  },
+
+  deleteSubject: async (id) => {
+    await Subject.findByIdAndRemove(id).exec()
   }
 }
 

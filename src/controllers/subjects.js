@@ -49,9 +49,18 @@ const updateSubject = async (req, res) => {
   res.status(200).json(updatedSubject)
 }
 
+const deleteSubject = async (req, res) => {
+  const { id } = req.params
+
+  await subjectService.deleteSubject(id)
+
+  res.status(204).end()
+}
+
 module.exports = {
   createSubject,
   getSubjects,
   getSubjectById,
-  updateSubject
+  updateSubject,
+  deleteSubject
 }

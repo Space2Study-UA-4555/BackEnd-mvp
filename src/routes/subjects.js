@@ -40,4 +40,6 @@ router.patch(
   asyncWrapper(subjectsController.updateSubject)
 )
 
+router.delete('/:id', restrictTo(ADMIN), isEntityValid({ params }), asyncWrapper(subjectsController.deleteSubject))
+
 module.exports = router

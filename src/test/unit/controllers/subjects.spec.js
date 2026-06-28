@@ -1,7 +1,7 @@
 jest.mock('~/services/subjects')
 
 const subjectService = require('~/services/subjects')
-const { createSubject, getSubjects, getSubjectById, updateSubject } = require('~/controllers/subjects')
+const { createSubject, getSubjects, getSubjectById, updateSubject, deleteSubject } = require('~/controllers/subjects')
 
 describe('Subject controller', () => {
   let mockResponse
@@ -9,7 +9,8 @@ describe('Subject controller', () => {
   beforeEach(() => {
     mockResponse = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
+      json: jest.fn(),
+      end: jest.fn()
     }
   })
 
@@ -187,5 +188,21 @@ describe('Subject controller', () => {
     expect(subjectService.updateSubject).toHaveBeenCalledWith(subjectId, updateData)
     expect(mockResponse.status).toHaveBeenCalledWith(200)
     expect(mockResponse.json).toHaveBeenCalledWith(updatedSubject)
+  })
+
+  it('should delete subject and return status 204', async () => {
+    const mockRequest = {
+      params: {
+        id: 'subjectId'
+      }
+    }
+
+    subjectService.deleteSubject.mockResolvedValue()
+
+    await deleteSubject(mockRequest, mockResponse)
+
+    expect(subjectService.deleteSubject).toHaveBeenCalledWith(mockRequest.params.id)
+    expect(mockResponse.status).toHaveBeenCalledWith(204)
+    expect(mockResponse.end).toHaveBeenCalled()
   })
 })
