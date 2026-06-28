@@ -25,6 +25,10 @@ const categoryService = {
     const count = await Category.countDocuments(match)
 
     return { items, count }
+  },
+
+  getCategoryNames: async () => {
+    return await Category.find({}, 'name').collation({ locale: 'en', strength: 1 }).sort({ name: 'asc' }).lean().exec()
   }
 }
 

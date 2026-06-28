@@ -246,6 +246,76 @@ describe('GET /categories', () => {
   })
 })
 
+describe('GET /categories/names', () => {
+  let app, server, accessToken
+
+  const endpointUrl = '/categories/names'
+
+  beforeAll(async () => {
+    ;({ app, server } = await serverInit())
+  })
+
+  beforeEach(async () => {
+    accessToken = await testUserAuthentication(app, {
+      role: STUDENT,
+      firstName: 'Student',
+      lastName: 'User',
+      email: 'student@test.com',
+      password: 'Qwerty123@',
+      isEmailConfirmed: true
+    })
+
+    await Category.create([{ name: 'Frontend' }, { name: 'Backend' }, { name: 'Design' }])
+  })
+
+  afterEach(async () => {
+    await serverCleanup()
+    await Category.syncIndexes()
+  })
+
+  afterAll(async () => {
+    await stopServer(server)
+  })
+
+  it('should return category names', async () => {
+    const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+
+    expect(response.body).toHaveLength(3)
+
+    response.body.forEach((category) => {
+      expect(category).toHaveProperty('_id')
+      expect(category).toHaveProperty('name')
+      expect(Object.keys(category)).toEqual(expect.arrayContaining(['_id', 'name']))
+    })
+
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Frontend' }),
+        expect.objectContaining({ name: 'Backend' }),
+        expect.objectContaining({ name: 'Design' })
+      ])
+    )
+  })
+
+  it('should throw UNAUTHORIZED', async () => {
+    const response = await app.get(endpointUrl)
+
+    expect(response.statusCode).toBe(401)
+    expectError(401, UNAUTHORIZED, response)
+  })
+
+  it('should return empty array when there are no categories', async () => {
+    await Category.deleteMany({})
+
+    const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toEqual([])
+  })
+})
+
 describe('Category model', () => {
   it('should trim category name', () => {
     const category = new Category({
