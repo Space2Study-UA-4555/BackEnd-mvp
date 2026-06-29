@@ -2,7 +2,13 @@ const Category = require('~/models/category')
 const { serverInit, serverCleanup, stopServer } = require('~/test/setup')
 const testUserAuthentication = require('~/utils/testUserAuth')
 const { expectError } = require('~/test/helpers')
-const { UNAUTHORIZED, DOCUMENT_ALREADY_EXISTS, VALIDATION_ERROR } = require('~/consts/errors')
+const {
+  UNAUTHORIZED,
+  DOCUMENT_ALREADY_EXISTS,
+  VALIDATION_ERROR,
+  INVALID_ID,
+  DOCUMENT_NOT_FOUND
+} = require('~/consts/errors')
 const {
   roles: { TUTOR, STUDENT, ADMIN }
 } = require('~/consts/auth')
@@ -313,6 +319,69 @@ describe('GET /categories/names', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.body).toEqual([])
+  })
+})
+
+describe(`GET ${endpointUrl}:id`, () => {
+  let category, app, server, accessToken
+
+  beforeAll(async () => {
+    ;({ app, server } = await serverInit())
+  })
+
+  beforeEach(async () => {
+    accessToken = await testUserAuthentication(app, {
+      role: STUDENT,
+      firstName: 'Student',
+      lastName: 'User',
+      email: 'student@test.com',
+      password: 'Qwerty123@',
+      isEmailConfirmed: true
+    })
+
+    category = await Category.create({
+      name: 'Frontend'
+    })
+  })
+
+  afterEach(async () => {
+    await serverCleanup()
+    await Category.syncIndexes()
+  })
+
+  afterAll(async () => {
+    await stopServer(server)
+  })
+
+  it('should return category by id', async () => {
+    const response = await app.get(endpointUrl + category._id).set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+
+    expect(response.body).toMatchObject({
+      _id: category._id.toString(),
+      name: 'Frontend'
+    })
+  })
+
+  it('should throw UNAUTHORIZED', async () => {
+    const response = await app.get(endpointUrl + category._id)
+
+    expectError(401, UNAUTHORIZED, response)
+  })
+
+  it('should throw INVALID_ID for non-ObjectId value', async () => {
+    const response = await app.get(endpointUrl + 'invalid-id').set('Cookie', [`accessToken=${accessToken}`])
+
+    expectError(400, INVALID_ID, response)
+  })
+
+  it('should throw DOCUMENT_NOT_FOUND for valid but non-existent id', async () => {
+    const response = await app
+      .get(endpointUrl + '000000000000000000000000')
+      .set('Cookie', [`accessToken=${accessToken}`])
+
+    expectError(404, DOCUMENT_NOT_FOUND(['Category']), response)
   })
 })
 

@@ -28,6 +28,14 @@ const getCategoryNames = async (_req, res) => {
   res.status(200).json(categoryNames)
 }
 
+const getCategoryById = async (req, res) => {
+  const { id } = req.params
+
+  const category = await categoryService.getCategoryById(id)
+
+  res.status(200).json(category)
+}
+
 const createCategory = async (req, res) => {
   const data = req.body
 
@@ -39,5 +47,6 @@ const createCategory = async (req, res) => {
 module.exports = {
   getCategories,
   getCategoryNames,
+  getCategoryById,
   createCategory
 }

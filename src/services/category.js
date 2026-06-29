@@ -29,6 +29,10 @@ const categoryService = {
 
   getCategoryNames: async () => {
     return await Category.find({}, 'name').collation({ locale: 'en', strength: 1 }).sort({ name: 'asc' }).lean().exec()
+  },
+
+  getCategoryById: async (id) => {
+    return await Category.findById(id).lean().exec()
   }
 }
 
