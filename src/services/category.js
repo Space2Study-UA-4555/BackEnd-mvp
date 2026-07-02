@@ -3,12 +3,11 @@ const Subject = require('~/models/subject')
 
 const categoryService = {
   createCategory: async (data) => {
-    const { name, appearance, totalOffers } = data
+    const { name, appearance } = data
 
     const category = await Category.create({
       name,
-      appearance,
-      totalOffers
+      appearance
     })
 
     return category

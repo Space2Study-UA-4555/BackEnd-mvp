@@ -83,15 +83,6 @@ paths:
                     color:
                       type: string
                       example: '#66C42C'
-                totalOffers:
-                  type: object
-                  properties:
-                    student:
-                      type: integer
-                      example: 0
-                    tutor:
-                      type: integer
-                      example: 0
       responses:
         '201':
           description: Category created

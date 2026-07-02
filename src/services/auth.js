@@ -1,4 +1,5 @@
 const crypto = require('node:crypto')
+const bcrypt = require('bcrypt')
 const tokenService = require('~/services/token')
 const emailService = require('~/services/email')
 const googleService = require('~/services/google')
@@ -36,7 +37,7 @@ const authService = {
       throw createError(401, USER_NOT_FOUND)
     }
 
-    const checkedPassword = password === user.password || isFromGoogle
+    const checkedPassword = isFromGoogle || (await bcrypt.compare(password, user.password))
 
     if (!checkedPassword) {
       throw createError(401, INCORRECT_CREDENTIALS)
@@ -121,15 +122,7 @@ const authService = {
 
     if (!user) {
       const randomPassword = crypto.randomBytes(16).toString('hex')
-      await createUser(
-        'student',
-        firstName || 'FirstName',
-        lastName || 'LastName',
-        email,
-        randomPassword,
-        'en',
-        true
-      )
+      await createUser('student', firstName || 'FirstName', lastName || 'LastName', email, randomPassword, 'en', true)
     } else if (!user.isEmailConfirmed) {
       await privateUpdateUser(user._id, { isEmailConfirmed: true })
     }
