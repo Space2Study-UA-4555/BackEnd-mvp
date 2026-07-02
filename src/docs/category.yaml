@@ -186,3 +186,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /categories/{id}/subjects/names:
+    get:
+      summary: Get subject names by category id
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Category identifier
+          example: 665f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Subject names retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                      example: 665f1f77bcf86cd799439125
+                    name:
+                      type: string
+                      example: React
+        '400':
+          description: Invalid category id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

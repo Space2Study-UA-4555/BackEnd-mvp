@@ -1,4 +1,5 @@
 const Category = require('~/models/category')
+const Subject = require('~/models/subject')
 const { serverInit, serverCleanup, stopServer } = require('~/test/setup')
 const testUserAuthentication = require('~/utils/testUserAuth')
 const { expectError } = require('~/test/helpers')
@@ -87,78 +88,83 @@ describe('Category controller', () => {
     })
 
     expect(response.body._id).toBeDefined()
-  }),
-    it('should throw UNAUTHORIZED', async () => {
-      const response = await app.post(endpointUrl).send({
-        name: 'Frontend test UNAUTHORIZED'
-      })
+  })
 
-      expectError(401, UNAUTHORIZED, response)
-    }),
-    it('should forbid student to create category', async () => {
-      const response = await app
-        .post(endpointUrl)
-        .send({
-          name: 'Frontend forbid student user'
-        })
-        .set('Cookie', [`accessToken=${studentAccessToken}`])
-
-      expect(response.statusCode).toBe(403)
-    }),
-    it('should forbid tutor to create category', async () => {
-      const response = await app
-        .post(endpointUrl)
-        .send({
-          name: 'Frontend forbid tutor user'
-        })
-        .set('Cookie', [`accessToken=${tutorAccessToken}`])
-
-      expect(response.statusCode).toBe(403)
-    }),
-    it('should throw DOCUMENT_ALREADY_EXISTS', async () => {
-      const category = {
-        name: 'Frontend'
-      }
-
-      const newCategory = {
-        name: 'Frontend'
-      }
-
-      await app
-        .post(endpointUrl)
-        .send(category)
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      await app
-        .post(endpointUrl)
-        .send(newCategory)
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      const response = await app
-        .post(endpointUrl)
-        .send(newCategory)
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      expectError(409, DOCUMENT_ALREADY_EXISTS('name'), response)
-    }),
-    it('should throw validation error for invalid color', async () => {
-      const response = await app
-        .post(endpointUrl)
-        .send({
-          name: 'Frontend invalid color',
-          appearance: {
-            icon: 'icon',
-            color: 'green'
-          }
-        })
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      expectError(
-        409,
-        VALIDATION_ERROR('Category validation failed: appearance.color: Color must be a valid HEX color'),
-        response
-      )
+  it('should throw UNAUTHORIZED', async () => {
+    const response = await app.post(endpointUrl).send({
+      name: 'Frontend test UNAUTHORIZED'
     })
+
+    expectError(401, UNAUTHORIZED, response)
+  })
+
+  it('should forbid student to create category', async () => {
+    const response = await app
+      .post(endpointUrl)
+      .send({
+        name: 'Frontend forbid student user'
+      })
+      .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+    expect(response.statusCode).toBe(403)
+  })
+
+  it('should forbid tutor to create category', async () => {
+    const response = await app
+      .post(endpointUrl)
+      .send({
+        name: 'Frontend forbid tutor user'
+      })
+      .set('Cookie', [`accessToken=${tutorAccessToken}`])
+
+    expect(response.statusCode).toBe(403)
+  })
+
+  it('should throw DOCUMENT_ALREADY_EXISTS', async () => {
+    const category = {
+      name: 'Frontend'
+    }
+
+    const newCategory = {
+      name: 'Frontend'
+    }
+
+    await app
+      .post(endpointUrl)
+      .send(category)
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    await app
+      .post(endpointUrl)
+      .send(newCategory)
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    const response = await app
+      .post(endpointUrl)
+      .send(newCategory)
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    expectError(409, DOCUMENT_ALREADY_EXISTS('name'), response)
+  })
+
+  it('should throw validation error for invalid color', async () => {
+    const response = await app
+      .post(endpointUrl)
+      .send({
+        name: 'Frontend invalid color',
+        appearance: {
+          icon: 'icon',
+          color: 'green'
+        }
+      })
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    expectError(
+      409,
+      VALIDATION_ERROR('Category validation failed: appearance.color: Color must be a valid HEX color'),
+      response
+    )
+  })
 
   it('should create category with default appearance values', async () => {
     const response = await app
@@ -379,6 +385,114 @@ describe(`GET ${endpointUrl}:id`, () => {
   it('should throw DOCUMENT_NOT_FOUND for valid but non-existent id', async () => {
     const response = await app
       .get(endpointUrl + '000000000000000000000000')
+      .set('Cookie', [`accessToken=${accessToken}`])
+
+    expectError(404, DOCUMENT_NOT_FOUND(['Category']), response)
+  })
+})
+
+describe('Category controller - get subject names by category id', () => {
+  let app
+  let server
+  let accessToken
+  let category
+
+  beforeAll(async () => {
+    ;({ app, server } = await serverInit())
+  })
+
+  beforeEach(async () => {
+    accessToken = await testUserAuthentication(app, {
+      role: STUDENT,
+      firstName: 'Student',
+      lastName: 'User',
+      email: 'student@test.com',
+      password: 'Qwerty123@',
+      isEmailConfirmed: true
+    })
+
+    category = await Category.create({
+      name: 'Frontend'
+    })
+
+    await Subject.create([
+      {
+        name: 'React',
+        category: category._id
+      },
+      {
+        name: 'JavaScript',
+        category: category._id
+      }
+    ])
+  })
+
+  afterEach(async () => {
+    await serverCleanup()
+    await Category.syncIndexes()
+    await Subject.syncIndexes()
+  })
+
+  afterAll(async () => {
+    await stopServer(server)
+  })
+
+  it('should return subject names by category id', async () => {
+    const response = await app
+      .get(`/categories/${category._id}/subjects/names`)
+      .set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+
+    expect(response.body).toHaveLength(2)
+
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'React'
+        }),
+        expect.objectContaining({
+          name: 'JavaScript'
+        })
+      ])
+    )
+
+    response.body.forEach((subject) => {
+      expect(subject).toHaveProperty('_id')
+      expect(subject).toHaveProperty('name')
+    })
+  })
+
+  it('should return empty array when category has no subjects', async () => {
+    const emptyCategory = await Category.create({
+      name: 'Backend'
+    })
+
+    const response = await app
+      .get(`/categories/${emptyCategory._id}/subjects/names`)
+      .set('Cookie', [`accessToken=${accessToken}`])
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toEqual([])
+  })
+
+  it('should throw UNAUTHORIZED', async () => {
+    const response = await app.get(`/categories/${category._id}/subjects/names`)
+
+    expectError(401, UNAUTHORIZED, response)
+  })
+
+  it('should throw INVALID_ID for non-ObjectId value', async () => {
+    const response = await app
+      .get('/categories/invalid-id/subjects/names')
+      .set('Cookie', [`accessToken=${accessToken}`])
+
+    expectError(400, INVALID_ID, response)
+  })
+
+  it('should throw DOCUMENT_NOT_FOUND for valid but non-existent id', async () => {
+    const response = await app
+      .get('/categories/000000000000000000000000/subjects/names')
       .set('Cookie', [`accessToken=${accessToken}`])
 
     expectError(404, DOCUMENT_NOT_FOUND(['Category']), response)

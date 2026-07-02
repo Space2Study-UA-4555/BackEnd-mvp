@@ -18,6 +18,7 @@ const params = [{ model: Category, idName: 'id' }]
 router.get('/', asyncWrapper(category.getCategories))
 router.get('/names', asyncWrapper(category.getCategoryNames))
 router.get('/:id', isEntityValid({ params }), asyncWrapper(category.getCategoryById))
+router.get('/:id/subjects/names', isEntityValid({ params }), asyncWrapper(category.getSubjectNamesByCategoryId))
 
 router.use(restrictTo(ADMIN))
 router.post('/', asyncWrapper(category.createCategory))

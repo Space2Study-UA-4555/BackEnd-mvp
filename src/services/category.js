@@ -1,4 +1,5 @@
 const Category = require('~/models/category')
+const Subject = require('~/models/subject')
 
 const categoryService = {
   createCategory: async (data) => {
@@ -33,6 +34,14 @@ const categoryService = {
 
   getCategoryById: async (id) => {
     return await Category.findById(id).lean().exec()
+  },
+
+  getSubjectNamesByCategoryId: async (categoryId) => {
+    return await Subject.find({ category: categoryId }, 'name')
+      .collation({ locale: 'en', strength: 1 })
+      .sort({ name: 'asc' })
+      .lean()
+      .exec()
   }
 }
 
