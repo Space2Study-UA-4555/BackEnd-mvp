@@ -67,6 +67,8 @@ describe('Question service', () => {
     )
     expect(question.title).toBe(questionData.title)
     expect(question.text).toBe(questionData.text)
+    expect(question.answers).toEqual(questionData.answers)
+    expect(question.type).toBe(questionData.type)
   })
 
   it('should return null when question does not exist', async () => {
@@ -81,7 +83,7 @@ describe('Question service', () => {
     await questionService.createQuestion(user._id, {
       title: 'Question 1',
       text: 'Text 1',
-      answers: [],
+      answers: [{ text: 'Answer 1', isCorrect: true }],
       type: 'openAnswer',
       category: category._id
     })
@@ -89,7 +91,7 @@ describe('Question service', () => {
     await questionService.createQuestion(user._id, {
       title: 'Question 2',
       text: 'Text 2',
-      answers: [],
+      answers: [{ text: 'Answer 2', isCorrect: true }],
       type: 'openAnswer',
       category: category._id
     })
@@ -98,6 +100,22 @@ describe('Question service', () => {
 
     expect(result.count).toBe(2)
     expect(result.items).toHaveLength(2)
+
+    expect(result.items[0].title).toBe('Question 1')
+    expect(result.items[0].answers).toEqual([
+      {
+        text: 'Answer 1',
+        isCorrect: true
+      }
+    ])
+
+    expect(result.items[1].title).toBe('Question 2')
+    expect(result.items[1].answers).toEqual([
+      {
+        text: 'Answer 2',
+        isCorrect: true
+      }
+    ])
   })
 
   it('should apply skip and limit', async () => {
@@ -120,6 +138,8 @@ describe('Question service', () => {
 
     expect(result.count).toBe(3)
     expect(result.items).toHaveLength(1)
+    expect(result.items[0].title).toBe('Question 2')
+    expect(result.items[0].text).toBe('Text 2')
   })
 
   it('should create question', async () => {  
@@ -215,8 +235,19 @@ describe('Question service', () => {
 
     const savedQuestion = await Question.findById(question._id)
 
-    expect(savedQuestion.title).toBe(
-      questionDataOriginal.title
+    expect(savedQuestion.title).toBe(questionDataOriginal.title)
+    expect(savedQuestion.text).toBe(questionDataOriginal.text)
+    expect(savedQuestion.answers).toHaveLength(1)
+    expect(savedQuestion.answers[0].text).toBe(questionDataOriginal.answers[0].text)
+    expect(savedQuestion.answers[0].isCorrect).toBe(questionDataOriginal.answers[0].isCorrect)
+    expect(savedQuestion.type).toBe(questionDataOriginal.type)
+
+    expect(savedQuestion.author.toString()).toBe(
+      user._id.toString()
+    )
+
+    expect(savedQuestion.category.toString()).toBe(
+      category._id.toString()
     )
   })
 
@@ -267,6 +298,21 @@ describe('Question service', () => {
 
     const savedQuestion = await Question.findById(question._id)
 
+    expect(savedQuestion).not.toBeNull()
+
     expect(savedQuestion.title).toBe(questionData.title)
+    expect(savedQuestion.text).toBe(questionData.text)
+    expect(savedQuestion.answers).toHaveLength(1)
+    expect(savedQuestion.answers[0].text).toBe(questionData.answers[0].text)
+    expect(savedQuestion.answers[0].isCorrect).toBe(questionData.answers[0].isCorrect)
+    expect(savedQuestion.type).toBe(questionData.type)
+
+    expect(savedQuestion.author.toString()).toBe(
+      user._id.toString()
+    )
+
+    expect(savedQuestion.category.toString()).toBe(
+      category._id.toString()
+    )
   })
 })
