@@ -4,6 +4,8 @@ COPY package*.json ./
 RUN npm pkg delete scripts.prepare && npm ci --omit=dev
 COPY src/ ./src/
 COPY module-aliases.js ./
+COPY migrate-mongo-config.js ./
+COPY migrations/ ./migrations/
 ENV NODE_ENV=production
 EXPOSE 3000
 USER node
