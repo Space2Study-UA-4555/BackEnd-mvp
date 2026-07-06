@@ -34,7 +34,16 @@ const notInvolvedUserData = {
 }
 
 describe('Offer controller', () => {
-  let app, server, offerAuthorAccessToken, notInvolvedUserAccessToken, offer, category, subject
+  let app,
+    server,
+    offerAuthorAccessToken,
+    notInvolvedUserAccessToken,
+    offer,
+    category,
+    englishSubject,
+    mathSubject,
+    scienceCategory,
+    offerAuthor
 
   beforeAll(async () => {
     ;({ app, server } = await serverInit())
@@ -43,22 +52,51 @@ describe('Offer controller', () => {
   beforeEach(async () => {
     offerAuthorAccessToken = await testUserAuthentication(app, offerAuthorUserData)
     notInvolvedUserAccessToken = await testUserAuthentication(app, notInvolvedUserData)
+    offerAuthor = await User.findOne({ email: offerAuthorUserData.email }).lean().exec()
 
-    const offerAuthor = await User.findOne({ email: offerAuthorUserData.email }).lean().exec()
+    category = await Category.create({
+      name: 'Languages',
+      appearance: { icon: 'icon', color: '#FFFFFF' }
+    })
 
-    category = await Category.create({ name: 'Languages' })
-    subject = await Subject.create({ name: 'English', category: category._id })
+    englishSubject = await Subject.create({
+      name: 'English',
+      category: category._id
+    })
+
+    mathSubject = await Subject.create({
+      name: 'Math',
+      category: category._id
+    })
+
+    scienceCategory = await Category.create({
+      name: 'Science',
+      appearance: { icon: 'icon', color: '#000000' }
+    })
 
     offer = await Offer.create({
       author: offerAuthor._id,
       authorRole: TUTOR,
-      price: 100,
-      proficiencyLevel: 'Beginner',
       title: 'English lessons',
       description: 'English lessons description',
+      price: 100,
+      proficiencyLevel: 'Beginner',
       languages: ['English'],
-      subject: subject._id,
+      subject: englishSubject._id,
       category: category._id,
+      FAQ: [{ question: 'Question', answer: 'Answer' }]
+    })
+
+    await Offer.create({
+      author: offerAuthor._id,
+      authorRole: TUTOR,
+      title: 'Math lessons',
+      description: 'Math lessons description',
+      price: 120,
+      proficiencyLevel: 'Beginner',
+      languages: ['English'],
+      subject: mathSubject._id,
+      category: scienceCategory._id,
       FAQ: [{ question: 'Question', answer: 'Answer' }]
     })
   })
@@ -79,7 +117,7 @@ describe('Offer controller', () => {
         title: 'New English lessons',
         description: 'New English lessons description',
         languages: ['English'],
-        subject: subject._id.toString(),
+        subject: englishSubject._id.toString(),
         category: category._id.toString(),
         FAQ: [{ question: 'Question', answer: 'Answer' }]
       }
@@ -112,6 +150,46 @@ describe('Offer controller', () => {
       expect(response.body).toHaveProperty('items')
       expect(response.body).toHaveProperty('count')
       expect(Array.isArray(response.body.items)).toBe(true)
+    })
+
+    it('should return subject and category in items', async () => {
+      const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${offerAuthorAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.items).toHaveLength(2)
+
+      const englishOffer = response.body.items.find((item) => item.title === 'English lessons')
+
+      expect(englishOffer.subject).toMatchObject({
+        _id: englishSubject._id.toString(),
+        name: 'English'
+      })
+      expect(englishOffer.category).toMatchObject({
+        _id: category._id.toString(),
+        appearance: category.appearance
+      })
+    })
+
+    it('should filter offers by subjectId query param', async () => {
+      const response = await app
+        .get(`${endpointUrl}?subjectId=${englishSubject._id.toString()}`)
+        .set('Cookie', [`accessToken=${offerAuthorAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.count).toBe(1)
+      expect(response.body.items).toHaveLength(1)
+      expect(response.body.items[0].title).toBe('English lessons')
+    })
+
+    it('should filter offers by categoryId query param', async () => {
+      const response = await app
+        .get(`${endpointUrl}?categoryId=${scienceCategory._id.toString()}`)
+        .set('Cookie', [`accessToken=${offerAuthorAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.count).toBe(1)
+      expect(response.body.items).toHaveLength(1)
+      expect(response.body.items[0].title).toBe('Math lessons')
     })
   })
 
@@ -200,7 +278,8 @@ describe('Offer controller', () => {
 
       expect(response.statusCode).toBe(403)
       expectError(403, FORBIDDEN, response)
-      expect(existingOffer).toBeDefined()
+      expect(existingOffer).not.toBeNull()
+      expect(existingOffer.title).toBe(offer.title)
     })
 
     it('should throw DOCUMENT_NOT_FOUND for valid but non-existent id', async () => {
