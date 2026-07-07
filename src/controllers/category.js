@@ -1,4 +1,48 @@
 const categoryService = require('~/services/category')
+const getMatchOptions = require('~/utils/getMatchOptions')
+const getSortOptions = require('~/utils/getSortOptions')
+const getRegex = require('~/utils/getRegex')
+
+const getCategories = async (req, res) => {
+  const { name, sort, skip, limit } = req.query
+
+  const match = getMatchOptions({
+    name: name ? getRegex(name) : undefined
+  })
+
+  const sortOptions = getSortOptions(sort)
+
+  const categories = await categoryService.getCategories(
+    match,
+    sortOptions,
+    Number.parseInt(skip, 10) || 0,
+    Number.parseInt(limit, 10) || 10
+  )
+
+  res.status(200).json(categories)
+}
+
+const getCategoryNames = async (_req, res) => {
+  const categoryNames = await categoryService.getCategoryNames()
+
+  res.status(200).json(categoryNames)
+}
+
+const getCategoryById = async (req, res) => {
+  const { id } = req.params
+
+  const category = await categoryService.getCategoryById(id)
+
+  res.status(200).json(category)
+}
+
+const getSubjectNamesByCategoryId = async (req, res) => {
+  const { id } = req.params
+
+  const subjects = await categoryService.getSubjectNamesByCategoryId(id)
+
+  res.status(200).json(subjects)
+}
 
 const createCategory = async (req, res) => {
   const data = req.body
@@ -9,5 +53,9 @@ const createCategory = async (req, res) => {
 }
 
 module.exports = {
-  createCategory
+  getCategories,
+  getCategoryNames,
+  getCategoryById,
+  createCategory,
+  getSubjectNamesByCategoryId
 }
