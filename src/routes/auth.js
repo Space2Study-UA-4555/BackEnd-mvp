@@ -32,6 +32,7 @@ router.patch(
   langMiddleware,
   asyncWrapper(authController.updatePassword)
 )
+router.patch('/confirm-email/:token', asyncWrapper(authController.confirmEmail))
 router.post('/google-auth', validationMiddleware(googleAuthValidationSchema), asyncWrapper(authController.googleAuth))
 
 module.exports = router

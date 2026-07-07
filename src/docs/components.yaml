@@ -144,6 +144,60 @@ components:
           type: string
           format: date-time
 
+    Lesson:
+      type: object
+      required:
+        - title
+        - description
+        - author
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        content:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+          nullable: true
+        author:
+          type: string
+        resourceType:
+          type: string
+          enum: [lessons, attachments, questions, quizzes]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LessonInput:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        content:
+          type: string
+        attachments:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+          nullable: true
+
     ResourcesCategory:
       type: object
       properties:

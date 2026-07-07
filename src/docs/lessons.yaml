@@ -1,0 +1,220 @@
+# @see src/routes/lesson.js
+tags:
+  - name: Lessons
+    description: Lesson management (requires authentication; write operations require tutor role)
+
+paths:
+  /lessons:
+    get:
+      summary: Get the authenticated user's lessons
+      description: >-
+        Returns lessons created by the authenticated user (author-scoped),
+        with optional title/category filters, sorting and pagination.
+      tags: [Lessons]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: title
+          schema:
+            type: string
+          description: Partial, case-insensitive match by lesson title
+        - in: query
+          name: categories
+          schema:
+            type: string
+          description: Filter by resource category id
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: Sorting options
+        - in: query
+          name: skip
+          schema:
+            type: integer
+          description: Number of items to skip (pagination)
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Maximum number of items to return
+      responses:
+        '200':
+          description: List of the authenticated user's lessons
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lesson'
+                  count:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new lesson (Tutor only)
+      tags: [Lessons]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonInput'
+      responses:
+        '201':
+          description: Lesson created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (requires tutor role)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lessons/{id}:
+    get:
+      summary: Get lesson by ID
+      tags: [Lessons]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lesson data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update lesson by ID (Tutor, owner only)
+      tags: [Lessons]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LessonInput'
+      responses:
+        '200':
+          description: Updated lesson
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (not the lesson owner or not a tutor)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete lesson by ID (Tutor, owner only)
+      tags: [Lessons]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Lesson deleted
+        '400':
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (not the lesson owner or not a tutor)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
