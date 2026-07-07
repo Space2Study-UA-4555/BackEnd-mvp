@@ -81,78 +81,83 @@ describe('Category controller', () => {
     })
 
     expect(response.body._id).toBeDefined()
-  }),
-    it('should throw UNAUTHORIZED', async () => {
-      const response = await app.post(endpointUrl).send({
-        name: 'Frontend test UNAUTHORIZED'
-      })
+  })
 
-      expectError(401, UNAUTHORIZED, response)
-    }),
-    it('should forbid student to create category', async () => {
-      const response = await app
-        .post(endpointUrl)
-        .send({
-          name: 'Frontend forbid student user'
-        })
-        .set('Cookie', [`accessToken=${studentAccessToken}`])
-
-      expect(response.statusCode).toBe(403)
-    }),
-    it('should forbid tutor to create category', async () => {
-      const response = await app
-        .post(endpointUrl)
-        .send({
-          name: 'Frontend forbid tutor user'
-        })
-        .set('Cookie', [`accessToken=${tutorAccessToken}`])
-
-      expect(response.statusCode).toBe(403)
-    }),
-    it('should throw DOCUMENT_ALREADY_EXISTS', async () => {
-      const category = {
-        name: 'Frontend'
-      }
-
-      const newCategory = {
-        name: 'Frontend'
-      }
-
-      await app
-        .post(endpointUrl)
-        .send(category)
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      await app
-        .post(endpointUrl)
-        .send(newCategory)
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      const response = await app
-        .post(endpointUrl)
-        .send(newCategory)
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      expectError(409, DOCUMENT_ALREADY_EXISTS('name'), response)
-    }),
-    it('should throw validation error for invalid color', async () => {
-      const response = await app
-        .post(endpointUrl)
-        .send({
-          name: 'Frontend invalid color',
-          appearance: {
-            icon: 'icon',
-            color: 'green'
-          }
-        })
-        .set('Cookie', [`accessToken=${adminAccessToken}`])
-
-      expectError(
-        409,
-        VALIDATION_ERROR('Category validation failed: appearance.color: Color must be a valid HEX color'),
-        response
-      )
+  it('should throw UNAUTHORIZED', async () => {
+    const response = await app.post(endpointUrl).send({
+      name: 'Frontend test UNAUTHORIZED'
     })
+
+    expectError(401, UNAUTHORIZED, response)
+  })
+
+  it('should forbid student to create category', async () => {
+    const response = await app
+      .post(endpointUrl)
+      .send({
+        name: 'Frontend forbid student user'
+      })
+      .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+    expect(response.statusCode).toBe(403)
+  })
+
+  it('should forbid tutor to create category', async () => {
+    const response = await app
+      .post(endpointUrl)
+      .send({
+        name: 'Frontend forbid tutor user'
+      })
+      .set('Cookie', [`accessToken=${tutorAccessToken}`])
+
+    expect(response.statusCode).toBe(403)
+  })
+
+  it('should throw DOCUMENT_ALREADY_EXISTS', async () => {
+    const category = {
+      name: 'Frontend'
+    }
+
+    const newCategory = {
+      name: 'Frontend'
+    }
+
+    await app
+      .post(endpointUrl)
+      .send(category)
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    await app
+      .post(endpointUrl)
+      .send(newCategory)
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    const response = await app
+      .post(endpointUrl)
+      .send(newCategory)
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    expectError(409, DOCUMENT_ALREADY_EXISTS('name'), response)
+  })
+
+  it('should throw validation error for invalid color', async () => {
+    const response = await app
+      .post(endpointUrl)
+      .send({
+        name: 'Frontend invalid color',
+        appearance: {
+          icon: 'icon',
+          color: 'green'
+        }
+      })
+      .set('Cookie', [`accessToken=${adminAccessToken}`])
+
+    expectError(
+      409,
+      VALIDATION_ERROR('Category validation failed: appearance.color: Color must be a valid HEX color'),
+      response
+    )
+  })
 
   it('should create category with default appearance values', async () => {
     const response = await app

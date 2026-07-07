@@ -1,4 +1,4 @@
-# @see src/routes/categories.js
+# @see src/routes/category.js
 tags:
   - name: Categories
     description: Category management (requires admin role)
