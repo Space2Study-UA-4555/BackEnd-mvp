@@ -10,7 +10,8 @@ const {
   INCORRECT_CREDENTIALS,
   BAD_RESET_TOKEN,
   BAD_REFRESH_TOKEN,
-  USER_NOT_FOUND
+  USER_NOT_FOUND,
+  BAD_CONFIRM_TOKEN
 } = require('~/consts/errors')
 const emailSubject = require('~/consts/emailSubject')
 const {
@@ -112,6 +113,21 @@ const authService = {
     await emailService.sendEmail(email, emailSubject.SUCCESSFUL_PASSWORD_RESET, language, {
       firstName
     })
+  },
+
+  confirmEmail: async (token) => {
+    const tokenData = tokenService.validateConfirmToken(token)
+    const tokenFromDB = await tokenService.findToken(token, CONFIRM_TOKEN)
+
+    if (!tokenData || !tokenFromDB) {
+      throw createError(400, BAD_CONFIRM_TOKEN)
+    }
+
+    const { id: userId } = tokenData
+
+    await privateUpdateUser(userId, { isEmailConfirmed: true })
+
+    await tokenService.removeConfirmToken(userId)
   },
 
   googleLogin: async (credential) => {

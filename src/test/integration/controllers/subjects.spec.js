@@ -1,9 +1,16 @@
 const { serverInit, serverCleanup, stopServer } = require('~/test/setup')
 const { expectError } = require('~/test/helpers')
-const { UNAUTHORIZED, FORBIDDEN, DOCUMENT_NOT_FOUND, FIELD_IS_NOT_DEFINED } = require('~/consts/errors')
+const {
+  UNAUTHORIZED,
+  FORBIDDEN,
+  DOCUMENT_NOT_FOUND,
+  FIELD_IS_NOT_DEFINED,
+  DOCUMENT_ALREADY_EXISTS
+} = require('~/consts/errors')
 const testUserAuthentication = require('~/utils/testUserAuth')
 
 const Category = require('~/models/category')
+const Subject = require('~/models/subject')
 
 const {
   roles: { ADMIN }
@@ -46,6 +53,7 @@ describe('Subject controller', () => {
     category = await Category.create({
       name: 'Languages'
     })
+    await Subject.syncIndexes()
   })
 
   afterEach(async () => {
@@ -128,6 +136,25 @@ describe('Subject controller', () => {
         .set('Cookie', [`accessToken=${accessToken}`])
 
       expectError(404, DOCUMENT_NOT_FOUND(['Category']), response)
+    })
+
+    it('should throw DOCUMENT_ALREADY_EXISTS for duplicate subject in the same category', async () => {
+      const subjectData = {
+        name: 'English',
+        category: category._id.toString()
+      }
+
+      await app
+        .post(endpointUrl)
+        .send(subjectData)
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      const response = await app
+        .post(endpointUrl)
+        .send(subjectData)
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expectError(409, DOCUMENT_ALREADY_EXISTS('name, category'), response)
     })
   })
 })
