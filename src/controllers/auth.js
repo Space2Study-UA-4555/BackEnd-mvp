@@ -67,6 +67,14 @@ const refreshAccessToken = async (req, res) => {
   res.status(200).json(tokens)
 }
 
+const confirmEmail = async (req, res) => {
+  const token = req.params.token
+
+  await authService.confirmEmail(token)
+
+  res.status(204).end()
+}
+
 const sendResetPasswordEmail = async (req, res) => {
   const { email } = req.body
   const lang = req.lang
@@ -104,6 +112,7 @@ module.exports = {
   login,
   logout,
   refreshAccessToken,
+  confirmEmail,
   sendResetPasswordEmail,
   updatePassword,
   googleAuth

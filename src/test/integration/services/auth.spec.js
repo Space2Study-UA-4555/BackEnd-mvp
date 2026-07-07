@@ -288,4 +288,65 @@ describe('Auth service', () => {
       code: errors.BAD_RESET_TOKEN.code
     })
   })
+
+  it('should confirm user email', async () => {
+    const createdUser = await User.create({
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: user.password,
+      appLanguage: user.language,
+      isEmailConfirmed: false,
+      lastLoginAs: user.role
+    })
+
+    const confirmToken = tokenService.generateConfirmToken({
+      id: createdUser._id
+    })
+
+    await tokenService.saveToken(createdUser._id, confirmToken, CONFIRM_TOKEN)
+
+    await authService.confirmEmail(confirmToken)
+
+    const updatedUser = await User.findById(createdUser._id).select('+isEmailConfirmed').lean().exec()
+
+    const savedToken = await Token.findOne({
+      user: createdUser._id
+    })
+      .lean()
+      .exec()
+
+    expect(updatedUser.isEmailConfirmed).toBe(true)
+    expect(savedToken[CONFIRM_TOKEN]).toBeNull()
+  })
+
+  it('should throw BAD_CONFIRM_TOKEN for invalid token', async () => {
+    await expect(authService.confirmEmail('invalid-token')).rejects.toMatchObject({
+      status: 400,
+      code: errors.BAD_CONFIRM_TOKEN.code
+    })
+  })
+
+  it('should throw BAD_CONFIRM_TOKEN when token is not found in database', async () => {
+    const createdUser = await User.create({
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: user.password,
+      appLanguage: user.language,
+      isEmailConfirmed: false,
+      lastLoginAs: user.role
+    })
+
+    const confirmToken = tokenService.generateConfirmToken({
+      id: createdUser._id
+    })
+
+    await expect(authService.confirmEmail(confirmToken)).rejects.toMatchObject({
+      status: 400,
+      code: errors.BAD_CONFIRM_TOKEN.code
+    })
+  })
 })
