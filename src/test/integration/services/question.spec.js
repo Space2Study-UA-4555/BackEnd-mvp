@@ -23,7 +23,7 @@ describe('Question service', () => {
   })
 
   beforeAll(async () => {
-    ({ server } = await serverInit())
+    ;({ server } = await serverInit())
   })
 
   beforeEach(async () => {
@@ -52,19 +52,12 @@ describe('Question service', () => {
   it('should get question by id', async () => {
     const questionData = createQuestionData()
 
-    const createdQuestion = await questionService.createQuestion(
-      user._id,
-      questionData
-    )
+    const createdQuestion = await questionService.createQuestion(user._id, questionData)
 
-    const question = await questionService.getQuestionById(
-      createdQuestion._id
-    )
+    const question = await questionService.getQuestionById(createdQuestion._id)
 
     expect(question).not.toBeNull()
-    expect(question._id.toString()).toBe(
-      createdQuestion._id.toString()
-    )
+    expect(question._id.toString()).toBe(createdQuestion._id.toString())
     expect(question.title).toBe(questionData.title)
     expect(question.text).toBe(questionData.text)
     expect(question.answers).toEqual(questionData.answers)
@@ -129,12 +122,7 @@ describe('Question service', () => {
       })
     }
 
-    const result = await questionService.getQuestions(
-      {},
-      {},
-      1,
-      1
-    )
+    const result = await questionService.getQuestions({}, {}, 1, 1)
 
     expect(result.count).toBe(3)
     expect(result.items).toHaveLength(1)
@@ -142,13 +130,10 @@ describe('Question service', () => {
     expect(result.items[0].text).toBe('Text 2')
   })
 
-  it('should create question', async () => {  
+  it('should create question', async () => {
     const questionData = createQuestionData()
 
-    const question = await questionService.createQuestion(
-      user._id,
-      questionData
-    )
+    const question = await questionService.createQuestion(user._id, questionData)
 
     const savedQuestion = await Question.findById(question._id)
 
@@ -156,37 +141,25 @@ describe('Question service', () => {
     expect(savedQuestion.title).toBe(questionData.title)
     expect(savedQuestion.text).toBe(questionData.text)
 
-    expect(savedQuestion.author.toString()).toBe(
-      user._id.toString()
-    )
+    expect(savedQuestion.author.toString()).toBe(user._id.toString())
 
-    expect(savedQuestion.category.toString()).toBe(
-      category._id.toString()
-    )
-
+    expect(savedQuestion.category.toString()).toBe(category._id.toString())
   })
 
   it('should update question', async () => {
     const questionDataOriginal = createQuestionData({
       title: 'What is Node.js?',
-      text: 'Explain Node.js',
+      text: 'Explain Node.js'
     })
 
     const questionDataUpdated = createQuestionData({
       title: 'What is Express.js?',
-      text: 'Explain Express.js',
+      text: 'Explain Express.js'
     })
 
-    const question = await questionService.createQuestion(
-      user._id,
-      questionDataOriginal
-    )
+    const question = await questionService.createQuestion(user._id, questionDataOriginal)
 
-    const updatedQuestion = await questionService.updateQuestion(
-      question._id,
-      user._id.toString(),
-      questionDataUpdated
-    )
+    const updatedQuestion = await questionService.updateQuestion(question._id, user._id.toString(), questionDataUpdated)
 
     const savedQuestion = await Question.findById(updatedQuestion._id)
 
@@ -194,13 +167,9 @@ describe('Question service', () => {
     expect(savedQuestion.title).toBe(questionDataUpdated.title)
     expect(savedQuestion.text).toBe(questionDataUpdated.text)
 
-    expect(savedQuestion.author.toString()).toBe(
-      user._id.toString()
-    )
+    expect(savedQuestion.author.toString()).toBe(user._id.toString())
 
-    expect(savedQuestion.category.toString()).toBe(
-      category._id.toString()
-    )
+    expect(savedQuestion.category.toString()).toBe(category._id.toString())
   })
 
   it('should throw an error when updating not your own question', async () => {
@@ -220,18 +189,13 @@ describe('Question service', () => {
     const questionDataUpdated = createQuestionData({
       title: 'What is Express.js?',
       text: 'Explain Express.js'
-    }) 
+    })
 
-    const question = await questionService.createQuestion(
-      user._id,
-      questionDataOriginal
-    )
+    const question = await questionService.createQuestion(user._id, questionDataOriginal)
 
-    await expect(questionService.updateQuestion(
-      question._id,
-      user2._id.toString(),
-      questionDataUpdated
-    )).rejects.toThrow('You do not have permission to perform this action.')
+    await expect(
+      questionService.updateQuestion(question._id, user2._id.toString(), questionDataUpdated)
+    ).rejects.toThrow('You do not have permission to perform this action.')
 
     const savedQuestion = await Question.findById(question._id)
 
@@ -242,26 +206,18 @@ describe('Question service', () => {
     expect(savedQuestion.answers[0].isCorrect).toBe(questionDataOriginal.answers[0].isCorrect)
     expect(savedQuestion.type).toBe(questionDataOriginal.type)
 
-    expect(savedQuestion.author.toString()).toBe(
-      user._id.toString()
-    )
+    expect(savedQuestion.author.toString()).toBe(user._id.toString())
 
-    expect(savedQuestion.category.toString()).toBe(
-      category._id.toString()
-    )
+    expect(savedQuestion.category.toString()).toBe(category._id.toString())
   })
 
   it('should delete question', async () => {
-
     const questionData = createQuestionData({
       title: 'What is Java?',
-      text: 'Explain Java',
+      text: 'Explain Java'
     })
 
-    const question = await questionService.createQuestion(
-      user._id,
-      questionData
-    )
+    const question = await questionService.createQuestion(user._id, questionData)
 
     await questionService.deleteQuestion(question._id, user._id.toString())
 
@@ -281,20 +237,14 @@ describe('Question service', () => {
 
     const questionData = createQuestionData({
       title: 'What is Java?',
-      text: 'Explain Java',
+      text: 'Explain Java'
     })
 
-    const question = await questionService.createQuestion(
-      user._id,
-      questionData
-    )
+    const question = await questionService.createQuestion(user._id, questionData)
 
-    await expect(
-      questionService.deleteQuestion(
-        question._id,
-        anotherUser._id.toString()
-      )
-    ).rejects.toThrow('You do not have permission to perform this action.')
+    await expect(questionService.deleteQuestion(question._id, anotherUser._id.toString())).rejects.toThrow(
+      'You do not have permission to perform this action.'
+    )
 
     const savedQuestion = await Question.findById(question._id)
 
@@ -307,12 +257,8 @@ describe('Question service', () => {
     expect(savedQuestion.answers[0].isCorrect).toBe(questionData.answers[0].isCorrect)
     expect(savedQuestion.type).toBe(questionData.type)
 
-    expect(savedQuestion.author.toString()).toBe(
-      user._id.toString()
-    )
+    expect(savedQuestion.author.toString()).toBe(user._id.toString())
 
-    expect(savedQuestion.category.toString()).toBe(
-      category._id.toString()
-    )
+    expect(savedQuestion.category.toString()).toBe(category._id.toString())
   })
 })

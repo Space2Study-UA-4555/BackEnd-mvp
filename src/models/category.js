@@ -36,6 +36,16 @@ const categorySchema = new Schema(
           message: INVALID_HEX_COLOR.message
         }
       }
+    },
+    totalOffers: {
+      student: {
+        type: Number,
+        default: 0
+      },
+      tutor: {
+        type: Number,
+        default: 0
+      }
     }
   },
   {

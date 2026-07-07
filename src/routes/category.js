@@ -1,0 +1,17 @@
+const router = require('express').Router()
+
+const asyncWrapper = require('~/middlewares/asyncWrapper')
+
+const {
+  roles: { ADMIN }
+} = require('~/consts/auth')
+
+const category = require('~/controllers/category')
+const { authMiddleware, restrictTo } = require('~/middlewares/auth')
+
+router.use(authMiddleware)
+
+router.use(restrictTo(ADMIN))
+router.post('/', asyncWrapper(category.createCategory))
+
+module.exports = router

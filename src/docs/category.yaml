@@ -1,0 +1,57 @@
+# @see src/routes/category.js
+tags:
+  - name: Categories
+    description: Category management (requires admin role)
+
+paths:
+  /categories:
+    post:
+      summary: Create a category
+      tags: [Categories]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: Frontend
+                appearance:
+                  type: object
+                  properties:
+                    icon:
+                      type: string
+                      example: mocked-path-to-icon
+                    color:
+                      type: string
+                      example: '#66C42C'
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Validation error or category already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
