@@ -21,8 +21,8 @@ paths:
           name: sort
           schema:
             type: string
-          description: Sort categories
-          example: name
+          description: Sort categories (JSON string with "orderBy" and "order")
+          example: '{"orderBy":"name","order":"asc"}'
         - in: query
           name: skip
           schema:

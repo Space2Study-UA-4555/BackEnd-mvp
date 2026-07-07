@@ -7,7 +7,7 @@ const getCategories = async (req, res) => {
   const { name, sort, skip, limit } = req.query
 
   const match = getMatchOptions({
-    name: getRegex(name)
+    name: name ? getRegex(name) : undefined
   })
 
   const sortOptions = getSortOptions(sort)

@@ -44,7 +44,7 @@ const isEntityValid = (entities) => {
     }
 
     if (models.length) {
-      next(createError(404, DOCUMENT_NOT_FOUND(models)))
+      return next(createError(404, DOCUMENT_NOT_FOUND(models)))
     }
 
     next()
