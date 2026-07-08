@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const { INVALID_ID } = require('~/consts/errors')
+const { createError } = require('~/utils/errorsHelper')
 const getRegex = require('../getRegex')
 
 const offerAggregateOptions = (query, params) => {
@@ -80,10 +82,18 @@ const offerAggregateOptions = (query, params) => {
   }
 
   if (subjectId) {
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      throw createError(400, INVALID_ID)
+    }
+
     match['subject._id'] = mongoose.Types.ObjectId(subjectId)
   }
 
   if (categoryId) {
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      throw createError(400, INVALID_ID)
+    }
+
     match['category._id'] = mongoose.Types.ObjectId(categoryId)
   }
 
