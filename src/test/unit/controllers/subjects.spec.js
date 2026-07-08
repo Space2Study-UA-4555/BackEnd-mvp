@@ -1,7 +1,7 @@
 jest.mock('~/services/subjects')
 
 const subjectService = require('~/services/subjects')
-const { createSubject } = require('~/controllers/subjects')
+const { createSubject, getSubjects } = require('~/controllers/subjects')
 
 describe('Subject controller', () => {
   let mockResponse
@@ -61,5 +61,80 @@ describe('Subject controller', () => {
     await createSubject(mockRequest, mockResponse)
 
     expect(subjectService.createSubject).toHaveBeenCalledWith(subjectData)
+  })
+
+  it('should get subjects and return status 200', async () => {
+    const mockData = {
+      items: [{ _id: 'subjectId', name: 'English' }],
+      count: 1
+    }
+    const mockRequest = {
+      query: {
+        name: 'Eng',
+        sort: '{"order":"asc","orderBy":"name"}',
+        skip: '0',
+        limit: '10'
+      }
+    }
+
+    subjectService.getSubjects.mockResolvedValue(mockData)
+
+    await getSubjects(mockRequest, mockResponse)
+
+    expect(subjectService.getSubjects).toHaveBeenCalled()
+    expect(mockResponse.status).toHaveBeenCalledWith(200)
+    expect(mockResponse.json).toHaveBeenCalledWith(mockData)
+  })
+
+  it('should pass name and category filters to service', async () => {
+    const mockRequest = {
+      query: {
+        name: 'Eng',
+        categories: 'categoryId',
+        skip: '0',
+        limit: '10'
+      }
+    }
+
+    subjectService.getSubjects.mockResolvedValue({ items: [], count: 0 })
+
+    await getSubjects(mockRequest, mockResponse)
+
+    const [matchArg] = subjectService.getSubjects.mock.calls[0]
+    expect(matchArg).toMatchObject({
+      name: { $regex: 'Eng' },
+      category: ['categoryId']
+    })
+  })
+
+  it('should use default name search when name is not provided', async () => {
+    const mockRequest = {
+      query: {
+        skip: '0',
+        limit: '10'
+      }
+    }
+
+    subjectService.getSubjects.mockResolvedValue({ items: [], count: 0 })
+
+    await getSubjects(mockRequest, mockResponse)
+
+    const [matchArg] = subjectService.getSubjects.mock.calls[0]
+    expect(matchArg).toMatchObject({
+      name: { $regex: '.*' }
+    })
+    expect(matchArg.category).toBeUndefined()
+  })
+
+  it('should pass default pagination to service when skip and limit are not provided', async () => {
+    const mockRequest = {
+      query: {}
+    }
+
+    subjectService.getSubjects.mockResolvedValue({ items: [], count: 0 })
+
+    await getSubjects(mockRequest, mockResponse)
+
+    expect(subjectService.getSubjects).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), 0, 10)
   })
 })

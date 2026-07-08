@@ -16,10 +16,12 @@ const {
 } = require('~/consts/auth')
 
 router.use(authMiddleware)
-router.use(restrictTo(ADMIN))
+
+router.get('/', asyncWrapper(subjectsController.getSubjects))
 
 router.post(
   '/',
+  restrictTo(ADMIN),
   validationMiddleware(subjectValidationSchema),
   isEntityValid({ body }),
   asyncWrapper(subjectsController.createSubject)
