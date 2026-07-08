@@ -152,4 +152,81 @@ describe('Subject service', () => {
     expect(findByIdChain.exec).toHaveBeenCalled()
     expect(result).toEqual(subject)
   })
+
+  it('should update subject with allowed fields and populate category', async () => {
+    const subjectId = 'subjectId'
+    const updateData = {
+      name: 'Spanish',
+      category: 'categoryId'
+    }
+    const subject = {
+      name: 'English',
+      category: 'oldCategoryId',
+      save: jest.fn().mockResolvedValue(),
+      populate: jest.fn().mockResolvedValue({
+        _id: subjectId,
+        ...updateData,
+        category: {
+          _id: updateData.category,
+          name: 'Languages'
+        }
+      })
+    }
+
+    getSubjectFindByIdChain(subject)
+
+    const result = await subjectService.updateSubject(subjectId, updateData)
+
+    expect(Subject.findById).toHaveBeenCalledWith(subjectId)
+    expect(subject.name).toBe(updateData.name)
+    expect(subject.category).toBe(updateData.category)
+    expect(subject.save).toHaveBeenCalled()
+    expect(subject.populate).toHaveBeenCalledWith({ path: 'category', select: '_id name' })
+    expect(result).toMatchObject({
+      _id: subjectId,
+      name: updateData.name,
+      category: {
+        _id: updateData.category,
+        name: 'Languages'
+      }
+    })
+  })
+
+  it('should ignore totalOffers during subject update', async () => {
+    const subjectId = 'subjectId'
+    const updateData = {
+      name: 'Spanish',
+      totalOffers: {
+        student: 100,
+        tutor: 50
+      }
+    }
+    const subject = {
+      name: 'English',
+      totalOffers: {
+        student: 0,
+        tutor: 0
+      },
+      save: jest.fn().mockResolvedValue(),
+      populate: jest.fn().mockResolvedValue({
+        _id: subjectId,
+        name: updateData.name,
+        totalOffers: {
+          student: 0,
+          tutor: 0
+        }
+      })
+    }
+
+    getSubjectFindByIdChain(subject)
+
+    await subjectService.updateSubject(subjectId, updateData)
+
+    expect(subject.name).toBe(updateData.name)
+    expect(subject.totalOffers).toEqual({
+      student: 0,
+      tutor: 0
+    })
+    expect(subject.save).toHaveBeenCalled()
+  })
 })

@@ -1,7 +1,7 @@
 # @see src/routes/subjects.js
 tags:
   - name: Subjects
-    description: Subject management. Create requires admin role.
+    description: Subject management. Create and update require admin role.
 
 paths:
   /subjects:
@@ -152,6 +152,81 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Subject not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update subject
+      description: Updates allowed subject fields only. totalOffers is managed by the system and cannot be updated manually.
+      tags: [Subjects]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Subject ID
+          example: 665f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Spanish
+                category:
+                  type: string
+                  example: 665f1f77bcf86cd799439012
+      responses:
+        '200':
+          description: Subject updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+              example:
+                _id: 665f1f77bcf86cd799439010
+                name: Spanish
+                category:
+                  _id: 665f1f77bcf86cd799439012
+                  name: Languages
+                totalOffers:
+                  student: 0
+                  tutor: 0
+                createdAt: '2026-07-02T10:00:00.000Z'
+                updatedAt: '2026-07-02T10:10:00.000Z'
+        '400':
+          description: Invalid subject ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Subject or category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
           content:
             application/json:
               schema:
