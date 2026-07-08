@@ -116,3 +116,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /subjects/{id}:
+    get:
+      summary: Get subject by ID
+      tags: [Subjects]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Subject ID
+          example: 665f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Subject data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+        '400':
+          description: Invalid subject ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Subject not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

@@ -5,7 +5,8 @@ const {
   FORBIDDEN,
   DOCUMENT_NOT_FOUND,
   FIELD_IS_NOT_DEFINED,
-  DOCUMENT_ALREADY_EXISTS
+  DOCUMENT_ALREADY_EXISTS,
+  INVALID_ID
 } = require('~/consts/errors')
 const testUserAuthentication = require('~/utils/testUserAuth')
 
@@ -281,6 +282,61 @@ describe('Subject controller', () => {
         items: [],
         count: 0
       })
+    })
+  })
+
+  describe(`GET ${endpointUrl}:id`, () => {
+    let subject
+
+    beforeEach(async () => {
+      subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+    })
+
+    it('should return subject by id for authenticated user', async () => {
+      const response = await app
+        .get(endpointUrl + subject._id.toString())
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        _id: subject._id.toString(),
+        name: subject.name,
+        category: {
+          _id: category._id.toString(),
+          name: category.name
+        },
+        totalOffers: {
+          student: 0,
+          tutor: 0
+        },
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String)
+      })
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.get(endpointUrl + subject._id.toString())
+
+      expect(response.statusCode).toBe(401)
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should throw INVALID_ID for non-ObjectId value', async () => {
+      const response = await app.get(endpointUrl + 'invalid-id').set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(400)
+      expectError(400, INVALID_ID, response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for valid but non-existent id', async () => {
+      const nonExistentId = '000000000000000000000000'
+      const response = await app.get(endpointUrl + nonExistentId).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Subject']), response)
     })
   })
 })

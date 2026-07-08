@@ -24,6 +24,10 @@ const subjectService = {
     const count = await Subject.countDocuments(match)
 
     return { items, count }
+  },
+
+  getSubjectById: async (id) => {
+    return await Subject.findById(id).populate({ path: 'category', select: '_id name' }).lean().exec()
   }
 }
 
