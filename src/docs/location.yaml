@@ -1,0 +1,31 @@
+tags:
+  - name: Locations
+    description: Location data
+
+paths:
+  /locations/countries:
+    get:
+      summary: Get countries
+      tags: [Locations]
+      responses:
+        '200':
+          description: List of countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: Ukraine
+                    iso2:
+                      type: string
+                      example: UA
+        '502':
+          description: Country State City API request failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
