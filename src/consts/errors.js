@@ -135,6 +135,10 @@ const errors = {
   INVALID_HEX_COLOR: {
     code: 'INVALID_HEX_COLOR',
     message: 'Color must be a valid HEX color'
+  },
+  COUNTRY_STATE_CITY_API_ERROR: {
+    code: 'COUNTRY_STATE_CITY_API_ERROR',
+    message: 'Country State City API request failed.'
   }
 }
 
