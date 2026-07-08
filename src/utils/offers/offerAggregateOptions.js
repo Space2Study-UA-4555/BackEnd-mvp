@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const { INVALID_ID } = require('~/consts/errors')
+const { createError } = require('~/utils/errorsHelper')
 const getRegex = require('../getRegex')
 
 const offerAggregateOptions = (query, params) => {
@@ -15,7 +17,9 @@ const offerAggregateOptions = (query, params) => {
     sort = 'createdAt',
     status,
     skip = 0,
-    limit = 5
+    limit = 5,
+    subjectId,
+    categoryId
   } = query
   const { id: authorId } = params
 
@@ -77,6 +81,22 @@ const offerAggregateOptions = (query, params) => {
     match._id = { $ne: mongoose.Types.ObjectId(excludedOfferId) }
   }
 
+  if (subjectId) {
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      throw createError(400, INVALID_ID)
+    }
+
+    match['subject._id'] = mongoose.Types.ObjectId(subjectId)
+  }
+
+  if (categoryId) {
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      throw createError(400, INVALID_ID)
+    }
+
+    match['category._id'] = mongoose.Types.ObjectId(categoryId)
+  }
+
   let sortOption = {}
 
   if (sort) {
@@ -126,6 +146,33 @@ const offerAggregateOptions = (query, params) => {
     {
       $unwind: '$author'
     },
+
+    {
+      $lookup: {
+        from: 'subjects',
+        localField: 'subject',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1 } }],
+        as: 'subject'
+      }
+    },
+    {
+      $unwind: { path: '$subject', preserveNullAndEmptyArrays: true }
+    },
+
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        pipeline: [{ $project: { appearance: 1 } }],
+        as: 'category'
+      }
+    },
+    {
+      $unwind: { path: '$category', preserveNullAndEmptyArrays: true }
+    },
+
     {
       $match: match
     },
