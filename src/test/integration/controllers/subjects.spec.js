@@ -157,4 +157,130 @@ describe('Subject controller', () => {
       expectError(409, DOCUMENT_ALREADY_EXISTS('name, category'), response)
     })
   })
+
+  describe(`GET ${endpointUrl}`, () => {
+    it('should get subjects for authenticated user', async () => {
+      await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        items: [
+          {
+            _id: expect.any(String),
+            name: 'English',
+            category: {
+              _id: category._id.toString(),
+              name: category.name
+            },
+            totalOffers: {
+              student: 0,
+              tutor: 0
+            },
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          }
+        ],
+        count: 1
+      })
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.get(endpointUrl)
+
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should filter subjects by name', async () => {
+      await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      await Subject.create({
+        name: 'Spanish',
+        category: category._id
+      })
+
+      const response = await app.get(`${endpointUrl}?name=Eng`).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.items).toHaveLength(1)
+      expect(response.body).toMatchObject({
+        items: [
+          {
+            _id: expect.any(String),
+            name: 'English',
+            category: {
+              _id: category._id.toString(),
+              name: category.name
+            },
+            totalOffers: {
+              student: 0,
+              tutor: 0
+            },
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          }
+        ],
+        count: 1
+      })
+    })
+
+    it('should filter subjects by category', async () => {
+      const secondCategory = await Category.create({
+        name: 'Math'
+      })
+
+      await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      await Subject.create({
+        name: 'Algebra',
+        category: secondCategory._id
+      })
+
+      const response = await app
+        .get(`${endpointUrl}?categories=${secondCategory._id.toString()}`)
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.items).toHaveLength(1)
+      expect(response.body).toMatchObject({
+        items: [
+          {
+            _id: expect.any(String),
+            name: 'Algebra',
+            category: {
+              _id: secondCategory._id.toString(),
+              name: secondCategory.name
+            },
+            totalOffers: {
+              student: 0,
+              tutor: 0
+            },
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          }
+        ],
+        count: 1
+      })
+    })
+
+    it('should return empty subjects list', async () => {
+      const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toEqual({
+        items: [],
+        count: 0
+      })
+    })
+  })
 })
