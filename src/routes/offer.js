@@ -7,10 +7,12 @@ const isEntityValid = require('~/middlewares/entityValidation')
 
 const offerController = require('~/controllers/offer')
 const Offer = require('~/models/offer')
+const Subject = require('~/models/subject')
+const Category = require('~/models/category')
 
 const body = [
-  { model: Offer, idName: 'categoryId' },
-  { model: Offer, idName: 'subjectId' }
+  { model: Category, idName: 'category' },
+  { model: Subject, idName: 'subject' }
 ]
 const params = [{ model: Offer, idName: 'id' }]
 
