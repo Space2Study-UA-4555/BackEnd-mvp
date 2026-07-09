@@ -1,9 +1,18 @@
 const { serverInit, serverCleanup, stopServer } = require('~/test/setup')
 const { expectError } = require('~/test/helpers')
-const { UNAUTHORIZED, FORBIDDEN, DOCUMENT_NOT_FOUND, FIELD_IS_NOT_DEFINED } = require('~/consts/errors')
+const {
+  UNAUTHORIZED,
+  FORBIDDEN,
+  DOCUMENT_NOT_FOUND,
+  FIELD_IS_NOT_DEFINED,
+  FIELD_IS_NOT_OF_PROPER_LENGTH,
+  DOCUMENT_ALREADY_EXISTS,
+  INVALID_ID
+} = require('~/consts/errors')
 const testUserAuthentication = require('~/utils/testUserAuth')
 
 const Category = require('~/models/category')
+const Subject = require('~/models/subject')
 
 const {
   roles: { ADMIN }
@@ -46,6 +55,7 @@ describe('Subject controller', () => {
     category = await Category.create({
       name: 'Languages'
     })
+    await Subject.syncIndexes()
   })
 
   afterEach(async () => {
@@ -128,6 +138,396 @@ describe('Subject controller', () => {
         .set('Cookie', [`accessToken=${accessToken}`])
 
       expectError(404, DOCUMENT_NOT_FOUND(['Category']), response)
+    })
+
+    it('should throw DOCUMENT_ALREADY_EXISTS for duplicate subject in the same category', async () => {
+      const subjectData = {
+        name: 'English',
+        category: category._id.toString()
+      }
+
+      await app
+        .post(endpointUrl)
+        .send(subjectData)
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      const response = await app
+        .post(endpointUrl)
+        .send(subjectData)
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expectError(409, DOCUMENT_ALREADY_EXISTS('name, category'), response)
+    })
+  })
+
+  describe(`GET ${endpointUrl}`, () => {
+    it('should get subjects for authenticated user', async () => {
+      await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        items: [
+          {
+            _id: expect.any(String),
+            name: 'English',
+            category: {
+              _id: category._id.toString(),
+              name: category.name
+            },
+            totalOffers: {
+              student: 0,
+              tutor: 0
+            },
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          }
+        ],
+        count: 1
+      })
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.get(endpointUrl)
+
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should filter subjects by name', async () => {
+      await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      await Subject.create({
+        name: 'Spanish',
+        category: category._id
+      })
+
+      const response = await app.get(`${endpointUrl}?name=Eng`).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.items).toHaveLength(1)
+      expect(response.body).toMatchObject({
+        items: [
+          {
+            _id: expect.any(String),
+            name: 'English',
+            category: {
+              _id: category._id.toString(),
+              name: category.name
+            },
+            totalOffers: {
+              student: 0,
+              tutor: 0
+            },
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          }
+        ],
+        count: 1
+      })
+    })
+
+    it('should filter subjects by category', async () => {
+      const secondCategory = await Category.create({
+        name: 'Math'
+      })
+
+      await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      await Subject.create({
+        name: 'Algebra',
+        category: secondCategory._id
+      })
+
+      const response = await app
+        .get(`${endpointUrl}?categories=${secondCategory._id.toString()}`)
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body.items).toHaveLength(1)
+      expect(response.body).toMatchObject({
+        items: [
+          {
+            _id: expect.any(String),
+            name: 'Algebra',
+            category: {
+              _id: secondCategory._id.toString(),
+              name: secondCategory.name
+            },
+            totalOffers: {
+              student: 0,
+              tutor: 0
+            },
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          }
+        ],
+        count: 1
+      })
+    })
+
+    it('should return empty subjects list', async () => {
+      const response = await app.get(endpointUrl).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toEqual({
+        items: [],
+        count: 0
+      })
+    })
+  })
+
+  describe(`GET ${endpointUrl}:id`, () => {
+    let subject
+
+    beforeEach(async () => {
+      subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+    })
+
+    it('should return subject by id for authenticated user', async () => {
+      const response = await app
+        .get(endpointUrl + subject._id.toString())
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        _id: subject._id.toString(),
+        name: subject.name,
+        category: {
+          _id: category._id.toString(),
+          name: category.name
+        },
+        totalOffers: {
+          student: 0,
+          tutor: 0
+        },
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String)
+      })
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.get(endpointUrl + subject._id.toString())
+
+      expect(response.statusCode).toBe(401)
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should throw INVALID_ID for non-ObjectId value', async () => {
+      const response = await app.get(endpointUrl + 'invalid-id').set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(400)
+      expectError(400, INVALID_ID, response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for valid but non-existent id', async () => {
+      const nonExistentId = '000000000000000000000000'
+      const response = await app.get(endpointUrl + nonExistentId).set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Subject']), response)
+    })
+  })
+
+  describe(`PATCH ${endpointUrl}:id`, () => {
+    let subject
+
+    beforeEach(async () => {
+      subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+    })
+
+    it('should update subject for admin', async () => {
+      const secondCategory = await Category.create({
+        name: 'Math'
+      })
+      const updateData = {
+        name: 'Algebra',
+        category: secondCategory._id.toString()
+      }
+
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send(updateData)
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        _id: subject._id.toString(),
+        name: updateData.name,
+        category: {
+          _id: updateData.category,
+          name: secondCategory.name
+        },
+        totalOffers: {
+          student: 0,
+          tutor: 0
+        },
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String)
+      })
+    })
+
+    it('should not update totalOffers from request data', async () => {
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          name: 'Spanish',
+          totalOffers: {
+            student: 100,
+            tutor: 50
+          }
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toMatchObject({
+        _id: subject._id.toString(),
+        name: 'Spanish',
+        totalOffers: {
+          student: 0,
+          tutor: 0
+        }
+      })
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.patch(endpointUrl + subject._id.toString()).send({
+        name: 'Spanish'
+      })
+
+      expect(response.statusCode).toBe(401)
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should throw FORBIDDEN for non-admin user', async () => {
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          name: 'Spanish'
+        })
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(403)
+      expectError(403, FORBIDDEN, response)
+    })
+
+    it('should throw INVALID_ID for non-ObjectId value', async () => {
+      const response = await app
+        .patch(endpointUrl + 'invalid-id')
+        .send({
+          name: 'Spanish'
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(400)
+      expectError(400, INVALID_ID, response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for valid but non-existent subject id', async () => {
+      const response = await app
+        .patch(endpointUrl + '000000000000000000000000')
+        .send({
+          name: 'Spanish'
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Subject']), response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for non-existing category id', async () => {
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          category: '000000000000000000000000'
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Category']), response)
+    })
+
+    it('should throw FIELD_IS_NOT_OF_PROPER_LENGTH for invalid subject name', async () => {
+      const name = 'a'.repeat(51)
+      const response = await app
+        .patch(endpointUrl + subject._id.toString())
+        .send({
+          name
+        })
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(422)
+      expectError(422, FIELD_IS_NOT_OF_PROPER_LENGTH('name', { min: 1, max: 50 }), response)
+    })
+  })
+
+  describe(`DELETE ${endpointUrl}:id`, () => {
+    it('should delete subject for admin', async () => {
+      const subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      const response = await app
+        .delete(endpointUrl + subject._id.toString())
+        .set('Cookie', [`accessToken=${accessToken}`])
+      const deletedSubject = await Subject.findById(subject._id).lean().exec()
+
+      expect(response.statusCode).toBe(204)
+      expect(response.body).toEqual({})
+      expect(deletedSubject).toBeNull()
+    })
+
+    it('should throw UNAUTHORIZED', async () => {
+      const response = await app.delete(endpointUrl + '000000000000000000000000')
+
+      expect(response.statusCode).toBe(401)
+      expectError(401, UNAUTHORIZED, response)
+    })
+
+    it('should throw FORBIDDEN for non-admin user', async () => {
+      const subject = await Subject.create({
+        name: 'English',
+        category: category._id
+      })
+
+      const response = await app
+        .delete(endpointUrl + subject._id.toString())
+        .set('Cookie', [`accessToken=${studentAccessToken}`])
+
+      expect(response.statusCode).toBe(403)
+      expectError(403, FORBIDDEN, response)
+    })
+
+    it('should throw DOCUMENT_NOT_FOUND for non-existing subject id', async () => {
+      const response = await app
+        .delete(endpointUrl + '000000000000000000000000')
+        .set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(404)
+      expectError(404, DOCUMENT_NOT_FOUND(['Subject']), response)
+    })
+
+    it('should throw INVALID_ID for non-ObjectId value', async () => {
+      const response = await app.delete(endpointUrl + 'invalid-id').set('Cookie', [`accessToken=${accessToken}`])
+
+      expect(response.statusCode).toBe(400)
+      expectError(400, INVALID_ID, response)
     })
   })
 })

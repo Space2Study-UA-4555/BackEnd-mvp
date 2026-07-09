@@ -1,10 +1,65 @@
 # @see src/routes/subjects.js
 tags:
   - name: Subjects
-    description: Subject management (requires admin role)
+    description: Subject management. Create, update and delete require admin role.
 
 paths:
   /subjects:
+    get:
+      summary: Get all subjects
+      tags: [Subjects]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Subject name search value
+        - in: query
+          name: categories
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+          description: Category id or list of category ids
+        - in: query
+          name: sort
+          schema:
+            type: string
+            example: '{"order":"asc","orderBy":"name"}'
+        - in: query
+          name: skip
+          schema:
+            type: integer
+            example: 0
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            example: 10
+      responses:
+        '200':
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subject'
+                  count:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     post:
       summary: Create a subject
       tags: [Subjects]
@@ -49,8 +104,169 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '409':
+          description: Subject with the same name and category already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /subjects/{id}:
+    get:
+      summary: Get subject by ID
+      tags: [Subjects]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Subject ID
+          example: 665f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Subject data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+        '400':
+          description: Invalid subject ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Subject not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update subject
+      description: Updates allowed subject fields only. totalOffers is managed by the system and cannot be updated manually.
+      tags: [Subjects]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Subject ID
+          example: 665f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Spanish
+                category:
+                  type: string
+                  example: 665f1f77bcf86cd799439012
+      responses:
+        '200':
+          description: Subject updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+              example:
+                _id: 665f1f77bcf86cd799439010
+                name: Spanish
+                category:
+                  _id: 665f1f77bcf86cd799439012
+                  name: Languages
+                totalOffers:
+                  student: 0
+                  tutor: 0
+                createdAt: '2026-07-02T10:00:00.000Z'
+                updatedAt: '2026-07-02T10:10:00.000Z'
+        '400':
+          description: Invalid subject ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Subject or category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete subject by id
+      tags: [Subjects]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Subject ID
+          example: 665f1f77bcf86cd799439011
+      responses:
+        '204':
+          description: Subject deleted
+        '400':
+          description: Invalid subject ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Subject not found
           content:
             application/json:
               schema:

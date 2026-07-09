@@ -75,6 +75,10 @@ const errors = {
     code: 'BAD_RESET_TOKEN',
     message: 'The reset token is either invalid or has expired.'
   },
+  BAD_CONFIRM_TOKEN: {
+    code: 'BAD_CONFIRM_TOKEN',
+    message: 'The confirm token is either invalid or has expired.'
+  },
   INVALID_TOKEN_NAME: {
     code: 'INVALID_TOKEN_NAME',
     message: 'The token name you used is invalid.'
@@ -128,10 +132,6 @@ const errors = {
     code: 'INVALID_GOOGLE_TOKEN',
     message: 'The Google authentication token is invalid or has expired.'
   },
-  COUNTRY_STATE_CITY_API_ERROR: {
-    code: 'COUNTRY_STATE_CITY_API_ERROR',
-    message: 'Country State City API request failed.'
-  },
   COUNTRY_CODE_REQUIRED: {
     code: 'COUNTRY_CODE_REQUIRED',
     message: 'Country code is required.'
@@ -143,6 +143,10 @@ const errors = {
   INVALID_HEX_COLOR: {
     code: 'INVALID_HEX_COLOR',
     message: 'Color must be a valid HEX color'
+  },
+  COUNTRY_STATE_CITY_API_ERROR: {
+    code: 'COUNTRY_STATE_CITY_API_ERROR',
+    message: 'Country State City API request failed.'
   }
 }
 
