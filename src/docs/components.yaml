@@ -38,6 +38,8 @@ components:
           properties:
             country:
               type: string
+            state:
+              type: string
             city:
               type: string
         status:

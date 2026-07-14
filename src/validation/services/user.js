@@ -4,6 +4,7 @@ const allowedUserFieldsForUpdate = {
   lastName: true,
   address: {
     country: true,
+    state: true,
     city: true
   },
   professionalSummary: true,
