@@ -295,3 +295,48 @@ components:
           type: number
         message:
           type: string
+
+    Quiz:
+      type: object
+      required:
+        - title
+        - items
+        - author
+        - resourceType
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: 'JavaScript Basics Quiz'
+        description:
+          type: string
+          maxLength: 150
+          example: 'A quick quiz covering JS fundamentals.'
+        items:
+          type: array
+          items:
+            type: string
+          description: 'Array of Question ObjectIds'
+        author:
+          type: string
+          description: 'User ObjectId'
+        category:
+          type: string
+          description: 'ResourcesCategory ObjectId'
+        resourceType:
+          type: string
+          enum: [lessons, attachments, questions, quizzes]
+          default: quizzes
+        settings:
+          type: object
+          description: 'Additional quiz configuration settings'
+          example: { 'allowRetake': true, 'showResults': 'afterSubmission' }
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
