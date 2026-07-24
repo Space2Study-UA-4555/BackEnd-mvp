@@ -3,7 +3,7 @@ require('~/initialization/envSetup')
 jest.mock('~/services/quiz')
 
 const quizService = require('~/services/quiz')
-const { deleteQuiz } = require('~/controllers/quiz')
+const { getQuizById, deleteQuiz } = require('~/controllers/quiz')
 
 describe('Quiz controller', () => {
   const mockUser = { id: 'authorId123' }
@@ -16,6 +16,39 @@ describe('Quiz controller', () => {
 
   afterEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe('getQuizById', () => {
+    it('should call quizService.getQuizById with id from params', async () => {
+      const mockReq = { params: { id: 'quizId123' } }
+
+      quizService.getQuizById.mockResolvedValue({ _id: 'quizId123', title: 'Test quiz' })
+
+      await getQuizById(mockReq, mockRes)
+
+      expect(quizService.getQuizById).toHaveBeenCalledWith('quizId123')
+    })
+
+    it('should respond with status 200 and the quiz data', async () => {
+      const mockReq = { params: { id: 'quizId123' } }
+      const mockQuiz = { _id: 'quizId123', title: 'Test quiz' }
+
+      quizService.getQuizById.mockResolvedValue(mockQuiz)
+
+      await getQuizById(mockReq, mockRes)
+
+      expect(mockRes.status).toHaveBeenCalledWith(200)
+      expect(mockRes.json).toHaveBeenCalledWith(mockQuiz)
+    })
+
+    it('should propagate errors thrown by quizService', async () => {
+      const mockReq = { params: { id: 'quizId123' } }
+      const error = new Error('Not found')
+
+      quizService.getQuizById.mockRejectedValue(error)
+
+      await expect(getQuizById(mockReq, mockRes)).rejects.toThrow('Not found')
+    })
   })
 
   describe('deleteQuiz', () => {

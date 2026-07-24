@@ -16,6 +16,8 @@ router.use(authMiddleware)
 router.param('id', idValidation)
 const params = [{ model: Question, idName: 'id' }]
 
+router.get('/:id', isEntityValid({ params }), asyncWrapper(quizController.getQuizById))
+
 router.use(restrictTo(TUTOR))
 router.delete('/:id', isEntityValid({ params }), asyncWrapper(quizController.deleteQuiz))
 

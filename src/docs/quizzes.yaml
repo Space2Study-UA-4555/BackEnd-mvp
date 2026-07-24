@@ -5,6 +5,31 @@ tags:
 
 paths:
   /quizzes/{id}:
+    get:
+      summary: Get quiz by ID
+      tags: [Quizzes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the quiz to retrieve
+      responses:
+        '200':
+          description: Quiz data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       summary: Delete quiz by ID (Tutor only, must be the author)
       tags: [Quizzes]
