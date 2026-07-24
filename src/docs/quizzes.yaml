@@ -1,0 +1,34 @@
+# @see src/routes/quiz.js
+tags:
+  - name: Quizzes
+    description: Quiz management (requires authentication; write operations require tutor role)
+
+paths:
+  /quizzes/{id}:
+    delete:
+      summary: Delete quiz by ID (Tutor only, must be the author)
+      tags: [Quizzes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the quiz to delete
+      responses:
+        '204':
+          description: Quiz deleted successfully
+        '403':
+          description: Forbidden - current user is not the author of the quiz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
