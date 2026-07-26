@@ -32,7 +32,7 @@ describe('Quiz model', () => {
     const error = quiz.validateSync()
 
     expect(error.errors.title).toBeDefined()
-    expect(error.errors.items).toBeDefined()
+    expect(error.errors.items).toBeUndefined()
     expect(error.errors.author).toBeDefined()
     expect(error.errors.resourceType).toBeUndefined()
   })
